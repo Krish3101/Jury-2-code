@@ -1,9 +1,3 @@
-"""
-Web Server for SQL Error Explainer & Fixer
-Provides multi-threaded HTTP REST API and serves the Single-Page Application interface.
-Uses Python Standard Library (zero external dependencies).
-"""
-
 import base64
 import datetime
 import http.server
@@ -14,7 +8,6 @@ import sys
 import urllib.parse
 from typing import Any, Dict
 
-# Ensure project root is in sys.path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
@@ -29,7 +22,6 @@ STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 
 def generate_audit_report(session_data: Dict[str, Any]) -> Dict[str, str]:
-    """Generates structured Markdown and HTML reports for jury evaluation."""
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     broken_sql = session_data.get("broken_sql", "")
     fixed_sql = session_data.get("fixed_sql", "")
@@ -51,65 +43,61 @@ def generate_audit_report(session_data: Dict[str, Any]) -> Dict[str, str]:
     for p in query_plan:
         plan_rows.append(f"| {p.get('id', '')} | {p.get('parent', '')} | {p.get('detail', '')} |")
 
-    md = f"""# 🛡️ SQL Error Explainer & Fixer — Diagnostic Audit Report
+    md = f"""# SQL Diagnostic & Audit Report
 **Timestamp:** `{timestamp}`  
-**Evaluation Model:** `{model_used}`  
-**Risk Level:** `{verdict.get('risk_level', 'SAFE')}` (Risk Score: `{verdict.get('risk_score', 0)}/100`)
+**Model:** `{model_used}`  
+**Risk Level:** `{verdict.get('risk_level', 'SAFE')}` (Score: `{verdict.get('risk_score', 0)}/100`)
 
 ---
 
-## 1. Problem Input & Database Error
-### Submitted Broken SQL
+## 1. Input Query & Error
 ```sql
 {broken_sql}
 ```
 
-### Database Engine Runtime Error
 ```
 {broken_error}
 ```
 
 ---
 
-## 2. Multi-Layer Safety Guardrail Audit
+## 2. Safety Verification
 **Statement Type:** `{verdict.get('statement_type', 'SELECT')}`  
-**Is Safe for Execution:** `{"YES" if verdict.get('is_safe', True) else "NO (BLOCKED)"}`  
-**Remediation Advice:** {verdict.get('remediation_advice', 'None')}
+**Status:** `{"SAFE" if verdict.get('is_safe', True) else "BLOCKED"}`  
+**Remediation:** {verdict.get('remediation_advice', 'None')}
 
-| Defense Layer | Status | Audit Findings |
+| Defense Layer | Status | Findings |
 |---|---|---|
 {chr(10).join(layer_rows) if layer_rows else "| Lexical & Boundary | PASSED | Clean execution |"}
 
 ---
 
-## 3. Diagnostic Analysis & Root Cause
+## 3. Diagnostic Analysis
 - **Category:** `{diagnosis.get('error_category', 'SYNTAX')}`
 - **Root Cause:** {diagnosis.get('root_cause', 'N/A')}
 - **Technical Details:** {diagnosis.get('technical_details', 'N/A')}
-- **Confidence Rating:** `{round(diagnosis.get('confidence', 0.95) * 100, 1)}%`
-- **Prevention Best Practice:** {diagnosis.get('prevention_advice', 'N/A')}
+- **Confidence:** `{round(diagnosis.get('confidence', 0.95) * 100, 1)}%`
+- **Best Practice:** {diagnosis.get('prevention_advice', 'N/A')}
 
 ---
 
-## 4. Remediation & Unified Diff
-### Corrected SQL Query
+## 4. Remediation & Diff
 ```sql
 {fixed_sql}
 ```
 
-### Structured Diff
 ```diff
 {diff.get('unified_text', 'No diff available')}
 ```
 
 ---
 
-## 5. Sandboxed Database Verification
-- **Execution Status:** `{"SUCCESS" if fixed_exec.get('success', False) else "FAILED"}`
-- **Returned Rows:** `{fixed_exec.get('row_count', 0)}`
-- **Execution Latency:** `{fixed_exec.get('execution_time_ms', 0)} ms`
+## 5. Execution Verification
+- **Status:** `{"SUCCESS" if fixed_exec.get('success', False) else "FAILED"}`
+- **Rows:** `{fixed_exec.get('row_count', 0)}`
+- **Latency:** `{fixed_exec.get('execution_time_ms', 0)} ms`
 
-### Query Execution Plan (EXPLAIN QUERY PLAN)
+### Query Plan (EXPLAIN QUERY PLAN)
 | Node ID | Parent | Detail |
 |---|---|---|
 {chr(10).join(plan_rows) if plan_rows else "| 0 | 0 | SCAN TABLE customers |"}
@@ -124,8 +112,6 @@ def generate_audit_report(session_data: Dict[str, Any]) -> Dict[str, str]:
 
 
 class RequestHandler(http.server.BaseHTTPRequestHandler):
-    """Custom HTTP Request Handler serving API endpoints and static SPA assets."""
-
     def _send_json(self, data: Any, status: int = 200):
         body = json.dumps(data, indent=2).encode("utf-8")
         self.send_response(status)
@@ -146,7 +132,6 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
-        # REST API Routes
         if path == "/api/schema":
             db = get_db_engine()
             context = db.get_schema_context()
@@ -170,8 +155,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             self._send_json(summary)
             return
 
-        # Static File Serving
-        if path == "/" or path == "":
+        if path in ("/", ""):
             file_path = os.path.join(STATIC_DIR, "index.html")
         else:
             rel_path = path.lstrip("/")
@@ -216,7 +200,6 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             allow_dml = bool(payload.get("allow_dml", False))
             dry_run = bool(payload.get("dry_run", True))
 
-            # Guardrail check
             verdict = guard.validate(sql, allow_dml=allow_dml)
             if not verdict.is_safe and verdict.risk_level == "CRITICAL":
                 self._send_json({
@@ -234,22 +217,21 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             return
 
         elif path == "/api/explain-and-fix":
-            broken_sql = payload.get("sql", "").strip()
+            broken_sql = (payload.get("sql") or payload.get("broken_sql") or "").strip()
             api_key = payload.get("api_key", "").strip()
             model = payload.get("model", "openrouter/free").strip()
             force_offline = bool(payload.get("force_offline", False))
 
-            # Step 1: Pre-execution guardrail check on broken input
             verdict = guard.validate(broken_sql)
             if not verdict.is_safe and verdict.risk_level == "CRITICAL":
                 self._send_json({
                     "is_destructive_input": True,
                     "verdict": verdict.to_dict(),
                     "diagnosis": {
-                        "root_cause": "The input query is a prohibited or destructive statement flagged by safety guardrails.",
-                        "technical_details": f"Guardrail violations: {'; '.join(verdict.violations)}",
+                        "root_cause": "The input query contains destructive statements flagged by safety guardrails.",
+                        "technical_details": f"Violations: {'; '.join(verdict.violations)}",
                         "error_category": "HAZARD_BLOCKED",
-                        "fixed_sql": "-- Prohibited operation blocked. No destructive query permitted.",
+                        "fixed_sql": "-- Prohibited operation blocked.",
                         "diff_explanation": "Execution aborted to protect database integrity.",
                         "confidence": 1.0,
                         "prevention_advice": verdict.remediation_advice
@@ -272,11 +254,9 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                 })
                 return
 
-            # Step 2: Execute broken query in DB sandbox to capture exact error
             broken_exec = db.execute_query(broken_sql, read_only=True, dry_run=True)
-            raw_error = broken_exec["error"] or "Query executed without syntax error. Inspect semantic/aggregation logic."
+            raw_error = broken_exec["error"] or "Query executed without syntax error."
 
-            # Step 3: Prompt LLM or Offline Expert Engine
             llm = OpenRouterLLMClient(api_key=api_key, model=model)
             schema_text = db.get_schema_summary_text()
             diagnosis, model_used = llm.generate_fix(
@@ -287,7 +267,6 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             )
             fixed_sql = diagnosis.get("fixed_sql", "").strip()
 
-            # Step 4: Validate proposed fix with Guardrails
             fix_verdict = guard.validate(fixed_sql)
             if not fix_verdict.is_safe and fix_verdict.risk_level == "CRITICAL":
                 self._send_json({
@@ -307,11 +286,8 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                 })
                 return
 
-            # Step 5: Execute proposed fix in DB sandbox
             fixed_exec = db.execute_query(fixed_sql, read_only=True, dry_run=True)
             query_plan = db.explain_query_plan(fixed_sql) if fixed_exec["success"] else []
-
-            # Step 6: Compute structured diff
             diff_data = generate_structured_diff(broken_sql, fixed_sql)
 
             self._send_json({
@@ -346,7 +322,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                 res = db.load_custom_db_bytes(db_bytes, filename=filename)
                 self._send_json(res)
             except Exception as e:
-                self._send_json({"success": False, "error": f"Base64 decode failed: {str(e)}"}, status=400)
+                self._send_json({"success": False, "error": str(e)}, status=400)
             return
 
         elif path == "/api/export-report":
@@ -360,17 +336,10 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
 def start_server(port: int = 8080):
     server_address = ("", port)
     httpd = http.server.ThreadingHTTPServer(server_address, RequestHandler)
-    print("=" * 70)
-    print(f" SQL Error Explainer & Fixer Server Started")
-    print(f" Web UI URL      : http://localhost:{port}")
-    print(f" API Endpoints   : http://localhost:{port}/api/schema")
-    print(f" Benchmarks API  : http://localhost:{port}/api/benchmarks/run")
-    print(f" Model Engine    : OpenRouter API / Offline Expert Engine")
-    print("=" * 70)
+    print(f"Server started on http://localhost:{port}")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\nShutting down server gracefully...")
         httpd.server_close()
 
 

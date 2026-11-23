@@ -1,12 +1,4 @@
-/**
- * Frontend Application Logic for SQL Error Explainer & Fixer
- * SQL Error Explainer & Fixer Frontend Controller
- * Coordinates REST API calls, editor interactions, diff rendering,
- * dynamic schema ingestion, benchmark execution, and diagnostic audit reports.
- */
-
 document.addEventListener("DOMContentLoaded", () => {
-  // Global Application State
   const state = {
     apiKey: localStorage.getItem("sql_fixer_api_key") || "",
     model: localStorage.getItem("sql_fixer_model") || "openrouter/free",
@@ -19,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
     activeTab: "workbench"
   };
 
-  // DOM Elements - Navigation & Header
   const tabNavWorkbench = document.getElementById("tab-nav-workbench");
   const tabNavSchema = document.getElementById("tab-nav-schema");
   const tabNavBenchmarks = document.getElementById("tab-nav-benchmarks");
@@ -32,7 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const activeModelBadge = document.getElementById("active-model-badge");
   const activeModelText = document.getElementById("active-model-text");
 
-  // Workbench DOM
   const presetSelect = document.getElementById("preset-select");
   const presetDescText = document.getElementById("preset-desc-text");
   const quickChips = document.querySelectorAll(".chip-btn");
@@ -45,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const terminalStatusBadge = document.getElementById("terminal-status-badge");
   const resultsSection = document.getElementById("results-section");
 
-  // Diagnosis Card
   const resCategory = document.getElementById("res-category");
   const resSafety = document.getElementById("res-safety");
   const resRiskScore = document.getElementById("res-risk-score");
@@ -56,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const resPrevention = document.getElementById("res-prevention");
   const resLayerPills = document.getElementById("res-layer-pills");
 
-  // Diff Panes & Toggles
   const btnDiffSplit = document.getElementById("btn-diff-split");
   const btnDiffUnified = document.getElementById("btn-diff-unified");
   const diffContainerSplit = document.getElementById("diff-container-split");
@@ -66,14 +54,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const diffUnifiedText = document.getElementById("diff-unified-text");
   const btnCopyFixed = document.getElementById("btn-copy-fixed");
 
-  // Execution Table
   const metricStatus = document.getElementById("metric-status");
   const metricRows = document.getElementById("metric-rows");
   const metricTime = document.getElementById("metric-time");
   const execTableContainer = document.getElementById("exec-table-container");
   const queryPlanContent = document.getElementById("query-plan-content");
 
-  // Schema & Sandbox Manager DOM
   const schemaStatusBadge = document.getElementById("schema-status-badge");
   const customDdlInput = document.getElementById("custom-ddl-input");
   const fileDdl = document.getElementById("file-ddl");
@@ -87,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const tablesCountBadge = document.getElementById("tables-count-badge");
   const activeTablesContainer = document.getElementById("active-tables-container");
 
-  // Benchmark Matrix DOM
   const btnRunBenchmarks = document.getElementById("btn-run-benchmarks");
   const scoreAccuracy = document.getElementById("score-accuracy");
   const scoreGuardrail = document.getElementById("score-guardrail");
@@ -97,7 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const benchmarkTableContainer = document.getElementById("benchmark-table-container");
   const benchFilterGroup = document.getElementById("bench-filter-group");
 
-  // Modals
   const reportModal = document.getElementById("report-modal");
   const btnCloseReportModal = document.getElementById("btn-close-report-modal");
   const reportMarkdownPreview = document.getElementById("report-markdown-preview");
@@ -118,7 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentReportMarkdown = "";
   let currentReportFilename = "sql_audit_report.md";
 
-  // 1. App Initialization
   function init() {
     updateModelPill();
     setupTabNavigation();
@@ -130,18 +113,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateModelPill() {
-    if (activeModelText) {
-      if (state.model === "offline-expert" || !state.apiKey) {
-        activeModelText.textContent = state.model === "offline-expert"
-          ? "Offline Expert"
-          : `${state.model} (Offline Auto)`;
-      } else {
-        activeModelText.textContent = state.model;
-      }
+    if (!activeModelText) return;
+    if (state.model === "offline-expert" || !state.apiKey) {
+      activeModelText.textContent = state.model === "offline-expert"
+        ? "Offline Expert"
+        : `${state.model} (Offline Auto)`;
+    } else {
+      activeModelText.textContent = state.model;
     }
   }
 
-  // 2. Tab Navigation
   function setupTabNavigation() {
     const tabs = [
       { btn: tabNavWorkbench, pane: tabWorkbench, id: "workbench" },
@@ -164,7 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 3. Preset Loading
   async function loadPresets() {
     try {
       const res = await fetch("/api/benchmarks");
@@ -172,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
       state.presets = data.benchmarks || [];
       populatePresetDropdown();
     } catch (err) {
-      console.error("Failed to load presets:", err);
+      console.error(err);
     }
   }
 
@@ -201,20 +181,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function loadScenarioById(presetId) {
     if (!presetId) {
-      presetDescText.textContent = "Select a preset scenario above or write custom SQL below.";
+      presetDescText.textContent = "Select a scenario above or type custom SQL below.";
       return;
     }
     const found = state.presets.find(p => p.id === presetId);
     if (!found) return;
 
     sqlInput.value = found.broken_sql;
-    presetDescText.innerHTML = `<strong>${found.title}</strong> &bull; Category: <span class="badge badge-category">${found.category}</span> &bull; ${found.misdiagnosis_risk || "Standard scenario"}`;
+    presetDescText.innerHTML = `<strong>${found.title}</strong> &bull; Category: <span class="badge badge-category">${found.category}</span> &bull; ${found.misdiagnosis_risk || ""}`;
     clearTerminal();
     resultsSection.classList.add("hidden");
     sqlInput.focus();
   }
 
-  // 4. Schema Loading & Tables Rendering
   async function loadSchema() {
     try {
       const res = await fetch("/api/schema");
@@ -234,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       renderSchemaTables(state.schema);
     } catch (err) {
-      console.error("Failed to load schema:", err);
+      console.error(err);
     }
   }
 
@@ -284,9 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
     activeTablesContainer.innerHTML = html;
   }
 
-  // 5. Schema & Database Ingestion Setup
   function setupSchemaManager() {
-    // Browse .sql file
     if (btnPickDdl && fileDdl) {
       btnPickDdl.addEventListener("click", () => fileDdl.click());
       fileDdl.addEventListener("change", (e) => {
@@ -300,12 +277,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Deploy DDL
     if (btnDeployDdl) {
       btnDeployDdl.addEventListener("click", async () => {
         const ddl = customDdlInput.value.trim();
         if (!ddl) {
-          alert("Please paste or load a valid SQL DDL script.");
+          alert("Please enter a SQL DDL script.");
           return;
         }
         btnDeployDdl.disabled = true;
@@ -332,7 +308,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // SQLite .db Binary Upload
     if (btnPickDb && fileDb) {
       btnPickDb.addEventListener("click", () => fileDb.click());
       fileDb.addEventListener("change", (e) => {
@@ -341,7 +316,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Drag and Drop Zone
     if (dbDropZone) {
       dbDropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
@@ -357,13 +331,12 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Reset Sandbox Main Button
     if (btnResetSchemaMain) {
       btnResetSchemaMain.addEventListener("click", async () => {
-        if (confirm("Reset the database sandbox to the pristine default schema?")) {
+        if (confirm("Reset database sandbox to default schema?")) {
           const res = await fetch("/api/schema/reset", { method: "POST" });
           const data = await res.json();
-          alert(data.message || "Database reset to default.");
+          alert(data.message || "Database reset.");
           loadSchema();
         }
       });
@@ -400,13 +373,12 @@ document.addEventListener("DOMContentLoaded", () => {
           if (dbUploadStatus) dbUploadStatus.innerHTML = `<span style="color:var(--accent-rose);">✗ ${escapeHtml(data.error)}</span>`;
         }
       } catch (err) {
-        if (dbUploadStatus) dbUploadStatus.innerHTML = `<span style="color:var(--accent-rose);">Upload failed: ${escapeHtml(err.message)}</span>`;
+        if (dbUploadStatus) dbUploadStatus.innerHTML = `<span style="color:var(--accent-rose);">${escapeHtml(err.message)}</span>`;
       }
     };
     reader.readAsDataURL(file);
   }
 
-  // 6. Workbench Event Handlers
   function setupEventListeners() {
     presetSelect.addEventListener("change", (e) => loadScenarioById(e.target.value));
 
@@ -423,7 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
       clearTerminal();
       resultsSection.classList.add("hidden");
       presetSelect.value = "";
-      presetDescText.textContent = "Select a preset scenario above or write custom SQL below.";
+      presetDescText.textContent = "Select a scenario above or type custom SQL below.";
       sqlInput.focus();
     });
 
@@ -449,7 +421,6 @@ document.addEventListener("DOMContentLoaded", () => {
       explainAndFixSQL(sql);
     });
 
-    // Diff toggles
     btnDiffSplit.addEventListener("click", () => {
       state.diffView = "split";
       btnDiffSplit.classList.add("active");
@@ -475,7 +446,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Settings Modal
     const openSettings = () => {
       if (cfgApiKey) cfgApiKey.value = state.apiKey;
       if (cfgModelSelect) {
@@ -524,15 +494,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     btnResetDb.addEventListener("click", async () => {
-      if (confirm("Reset the database sandbox to pristine seed state?")) {
+      if (confirm("Reset database sandbox to default state?")) {
         await fetch("/api/schema/reset", { method: "POST" });
-        alert("Database sandbox reset to pristine state!");
+        alert("Database sandbox reset.");
         loadSchema();
         closeModals();
       }
     });
 
-    // Report Modals
     if (btnExportQuick) btnExportQuick.addEventListener("click", exportAuditReport);
     if (btnExportSingle) btnExportSingle.addEventListener("click", exportAuditReport);
     if (btnCloseReportModal) btnCloseReportModal.addEventListener("click", closeModals);
@@ -559,10 +528,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (modalBackdrop) modalBackdrop.classList.remove("open");
   }
 
-  // 7. Raw Execution
   async function executeRawSQL(sql) {
     const isDryRun = checkDryRun ? checkDryRun.checked : true;
-    setTerminalLoading("Executing query in SQLite sandbox...");
+    setTerminalLoading("Executing query in sandbox...");
 
     try {
       const res = await fetch("/api/run-sql", {
@@ -580,16 +548,15 @@ document.addEventListener("DOMContentLoaded", () => {
         setTerminalSuccess(data);
       }
     } catch (err) {
-      setTerminalError(`Execution request failed: ${err.message}`, 0);
+      setTerminalError(`Execution failed: ${err.message}`, 0);
     }
   }
 
-  // 8. Explain & Fix Engine
   async function explainAndFixSQL(sql) {
     const isDryRun = checkDryRun ? checkDryRun.checked : true;
     btnExplainFix.disabled = true;
-    btnExplainFix.innerHTML = '<span class="spinner"></span> Diagnosing &amp; Remediating...';
-    setTerminalLoading("Capturing error and querying diagnostic engine...");
+    btnExplainFix.innerHTML = '<span class="spinner"></span> Diagnosing...';
+    setTerminalLoading("Analyzing query and error...");
     resultsSection.classList.add("hidden");
 
     try {
@@ -623,7 +590,7 @@ document.addEventListener("DOMContentLoaded", () => {
         resultsSection.classList.remove("hidden");
       }
     } catch (err) {
-      setTerminalError(`AI diagnosis failed: ${err.message}`, 0);
+      setTerminalError(`Diagnosis failed: ${err.message}`, 0);
     } finally {
       btnExplainFix.disabled = false;
       btnExplainFix.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg> Explain &amp; Fix with AI';
@@ -644,9 +611,8 @@ document.addEventListener("DOMContentLoaded", () => {
     resRootCause.textContent = diag.root_cause || "No root cause provided.";
     resTechnical.textContent = diag.technical_details || "N/A";
     resDiffSummary.textContent = diag.diff_explanation || "N/A";
-    resPrevention.textContent = diag.prevention_advice || "Always validate SQL syntax against relational schema.";
+    resPrevention.textContent = diag.prevention_advice || "Validate syntax against schema.";
 
-    // Render defense layer pills
     if (resLayerPills && verdict && verdict.defense_layers) {
       let layerHtml = "";
       for (const [k, v] of Object.entries(verdict.defense_layers)) {
@@ -694,7 +660,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!success) {
       execTableContainer.innerHTML = `<p class="table-placeholder error" style="color:var(--accent-rose);">Execution error: ${escapeHtml(exec.error || 'Unknown error')}</p>`;
     } else if (!exec.columns || exec.columns.length === 0 || !exec.rows || exec.rows.length === 0) {
-      execTableContainer.innerHTML = '<p class="table-placeholder">Query executed cleanly. (0 rows returned or DDL/mutation affected rows).</p>';
+      execTableContainer.innerHTML = '<p class="table-placeholder">Query executed cleanly.</p>';
     } else {
       let ths = exec.columns.map(c => `<th>${escapeHtml(c)}</th>`).join("");
       let trs = exec.rows.map(r => `<tr>${r.map(cell => `<td>${escapeHtml(String(cell === null ? 'NULL' : cell))}</td>`).join("")}</tr>`).join("");
@@ -715,18 +681,17 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `).join("");
       } else {
-        queryPlanContent.innerHTML = '<p class="terminal-dim" style="padding:0.5rem 0;">No query plan available for this statement.</p>';
+        queryPlanContent.innerHTML = '<p class="terminal-dim" style="padding:0.5rem 0;">No query plan available.</p>';
       }
     }
   }
 
-  // 9. Benchmark Suite Execution
   function setupBenchmarks() {
     if (!btnRunBenchmarks) return;
 
     btnRunBenchmarks.addEventListener("click", async () => {
       btnRunBenchmarks.disabled = true;
-      btnRunBenchmarks.innerHTML = '<span class="spinner"></span> Running 25 Tests...';
+      btnRunBenchmarks.innerHTML = '<span class="spinner"></span> Running Tests...';
 
       try {
         const res = await fetch("/api/benchmarks/run");
@@ -744,7 +709,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert(`Benchmark run failed: ${err.message}`);
       } finally {
         btnRunBenchmarks.disabled = false;
-        btnRunBenchmarks.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Re-Run 25-Test Benchmark Suite';
+        btnRunBenchmarks.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Re-Run Benchmark Suite';
       }
     });
 
@@ -823,7 +788,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <tr>
             <th>ID</th>
             <th>Category</th>
-            <th>Scenario &amp; Misdiagnosis Risk</th>
+            <th>Scenario</th>
             <th>Verdict</th>
             <th>Latency</th>
             <th>Action</th>
@@ -834,18 +799,15 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  // Global helper for bench load
   window.loadScenarioFromBench = function(presetId) {
     if (tabNavWorkbench) tabNavWorkbench.click();
     if (presetSelect) presetSelect.value = presetId;
     loadScenarioById(presetId);
   };
 
-  // 10. Export Diagnostic Audit Report
   async function exportAuditReport() {
     let session = state.currentSession;
     if (!session || !session.broken_sql) {
-      // Fallback: create mock or empty session with current editor text
       session = {
         broken_sql: sqlInput.value.trim() || "SELECT * FROM customers;",
         fixed_sql: currentFixedSql || "SELECT * FROM customers;",
@@ -889,7 +851,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Terminal Helpers
   function setTerminalLoading(msg) {
     terminalStatusBadge.textContent = "Processing";
     terminalStatusBadge.className = "badge";
@@ -901,7 +862,7 @@ document.addEventListener("DOMContentLoaded", () => {
     terminalStatusBadge.className = "badge badge-danger";
     terminalOutput.innerHTML = `
       <div class="terminal-err">
-        <span class="err-prefix">SQLite Error:</span> ${escapeHtml(errMsg)}
+        <span class="err-prefix">Error:</span> ${escapeHtml(errMsg)}
       </div>
       <div class="terminal-meta">Latency: ${timeMs} ms &bull; Rollback: Executed</div>
     `;
@@ -912,10 +873,10 @@ document.addEventListener("DOMContentLoaded", () => {
     terminalStatusBadge.className = "badge badge-danger";
     terminalOutput.innerHTML = `
       <div class="terminal-err" style="color:var(--accent-rose);">
-        <span class="err-prefix">AST Guardrail Blocked (Risk: ${verdict.risk_score || 95}/100):</span>
+        <span class="err-prefix">Security Guardrail Blocked (Risk: ${verdict.risk_score || 95}/100):</span>
         <br>${escapeHtml(violations)}
       </div>
-      <div class="terminal-meta" style="margin-top:0.4rem;">Remediation: ${escapeHtml(verdict.remediation_advice || 'Query aborted')}</div>
+      <div class="terminal-meta" style="margin-top:0.4rem;">Remediation: ${escapeHtml(verdict.remediation_advice || 'Aborted')}</div>
     `;
   }
 
@@ -923,7 +884,7 @@ document.addEventListener("DOMContentLoaded", () => {
     terminalStatusBadge.textContent = "Success";
     terminalStatusBadge.className = "badge badge-safety";
     terminalOutput.innerHTML = `
-      <div class="terminal-ok">✓ Query executed cleanly in SQLite sandbox.</div>
+      <div class="terminal-ok">✓ Query executed cleanly in sandbox.</div>
       <div class="terminal-meta">Rows returned: ${data.row_count || 0} &bull; Time: ${data.execution_time_ms || 0} ms</div>
     `;
   }
@@ -931,10 +892,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function clearTerminal() {
     terminalStatusBadge.textContent = "Idle";
     terminalStatusBadge.className = "badge";
-    terminalOutput.innerHTML = '<span class="terminal-dim">// Database error output and execution metrics will display here...</span>';
+    terminalOutput.innerHTML = '<span class="terminal-dim">// Database output and execution metrics will display here...</span>';
   }
 
-  // Utilities
   function escapeHtml(str) {
     if (!str) return "";
     return String(str)

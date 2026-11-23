@@ -1,20 +1,12 @@
-"""
-Database Engine & Sandboxing Module
-Provides schema management, mock data seeding, query execution, dry-run simulation,
-and dynamic schema/database ingestion (.sql DDL & .db binary files).
-"""
-
-import io
 import os
 import sqlite3
 import tempfile
 import threading
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 
 SAMPLE_SCHEMA_DDL = """
--- Customers Table
 CREATE TABLE IF NOT EXISTS customers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -24,7 +16,6 @@ CREATE TABLE IF NOT EXISTS customers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Departments Table
 CREATE TABLE IF NOT EXISTS departments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
@@ -32,7 +23,6 @@ CREATE TABLE IF NOT EXISTS departments (
     manager_id INTEGER
 );
 
--- Employees Table
 CREATE TABLE IF NOT EXISTS employees (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
@@ -42,7 +32,6 @@ CREATE TABLE IF NOT EXISTS employees (
     FOREIGN KEY (department_id) REFERENCES departments(id)
 );
 
--- Orders Table
 CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     customer_id INTEGER NOT NULL,
@@ -52,7 +41,6 @@ CREATE TABLE IF NOT EXISTS orders (
     FOREIGN KEY (customer_id) REFERENCES customers(id)
 );
 
--- Order Items Table
 CREATE TABLE IF NOT EXISTS order_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL,
@@ -64,7 +52,6 @@ CREATE TABLE IF NOT EXISTS order_items (
 """
 
 SAMPLE_DATA_SEED = """
--- Insert Customers
 INSERT INTO customers (name, email, country, loyalty_points, created_at) VALUES
 ('Alice Johnson', 'alice.j@example.com', 'USA', 450, '2023-01-15 08:30:00'),
 ('Bob Smith', 'bob.smith@example.com', 'UK', 120, '2023-03-22 14:15:00'),
@@ -73,14 +60,12 @@ INSERT INTO customers (name, email, country, loyalty_points, created_at) VALUES
 ('Evan Wright', 'evan.w@example.com', 'Canada', 50, '2023-08-01 09:10:00'),
 ('Fatima Al-Hassan', 'fatima.h@example.com', 'UAE', 720, '2023-02-14 13:00:00');
 
--- Insert Departments
 INSERT INTO departments (name, budget, manager_id) VALUES
 ('Engineering', 250000.0, 1),
 ('Sales & Marketing', 180000.0, 3),
 ('Finance', 120000.0, 5),
 ('Customer Support', 95000.0, 7);
 
--- Insert Employees
 INSERT INTO employees (name, department_id, salary, hire_date) VALUES
 ('Gregory House', 1, 115000.0, '2021-04-01'),
 ('James Wilson', 1, 92000.0, '2022-06-15'),
@@ -91,7 +76,6 @@ INSERT INTO employees (name, department_id, salary, hire_date) VALUES
 ('Chris Taub', 4, 62000.0, '2023-07-01'),
 ('Remy Hadley', 4, 65000.0, '2023-08-15');
 
--- Insert Orders
 INSERT INTO orders (customer_id, order_date, total_amount, status) VALUES
 (1, '2023-09-01', 349.50, 'delivered'),
 (1, '2023-10-12', 120.00, 'shipped'),
@@ -104,35 +88,31 @@ INSERT INTO orders (customer_id, order_date, total_amount, status) VALUES
 (6, '2023-07-19', 980.00, 'delivered'),
 (6, '2023-09-25', 410.50, 'shipped');
 
--- Insert Order Items
 INSERT INTO order_items (order_id, product_name, quantity, unit_price) VALUES
-(1, 'Wireless Noise-Canceling Headphones', 1, 249.50),
-(1, 'USB-C Fast Charging Cable (2m)', 2, 50.00),
-(2, 'Mechanical Gaming Keyboard', 1, 120.00),
-(3, 'Smart Ergonomic Office Chair', 1, 89.99),
-(4, 'Ultra-Wide 34-inch 4K Monitor', 2, 600.00),
-(4, 'Heavy-Duty Monitor Desk Arm', 1, 250.00),
+(1, 'Wireless Headphones', 1, 249.50),
+(1, 'USB-C Cable (2m)', 2, 50.00),
+(2, 'Mechanical Keyboard', 1, 120.00),
+(3, 'Office Chair', 1, 89.99),
+(4, 'Ultra-Wide Monitor', 2, 600.00),
+(4, 'Monitor Desk Arm', 1, 250.00),
 (5, 'Noise-Isolating Earbuds', 2, 145.00),
-(6, 'Standing Desk Converter 36-inch', 1, 450.00),
-(6, 'Anti-Fatigue Comfort Floor Mat', 1, 90.25),
-(7, 'Bluetooth Multi-Device Mouse', 1, 75.00),
+(6, 'Standing Desk Converter', 1, 450.00),
+(6, 'Comfort Floor Mat', 1, 90.25),
+(7, 'Bluetooth Mouse', 1, 75.00),
 (8, 'Laptop Aluminum Stand', 1, 45.00),
-(9, 'Smart Home Air Purifier HEPA', 2, 400.00),
-(9, 'Replacement HEPA Carbon Filters', 3, 60.00),
-(10, 'Portable SSD 2TB Rugged', 1, 280.50),
-(10, 'High-Speed USB-C Hub 7-in-1', 1, 130.00);
+(9, 'Smart Home Air Purifier', 2, 400.00),
+(9, 'Replacement Carbon Filters', 3, 60.00),
+(10, 'Portable SSD 2TB', 1, 280.50),
+(10, 'USB-C Hub 7-in-1', 1, 130.00);
 """
 
 
 class DatabaseEngine:
-    """Manages an embedded SQLite database sandbox with dynamic schema loading and isolation."""
-
     def __init__(self, db_path: str = ":memory:"):
         self.db_path = db_path
         self._lock = threading.Lock()
         self.is_custom_schema = False
         self.custom_schema_source = "default"
-        # For :memory:, use shared uri or hold persistent connection
         if db_path == ":memory:":
             self._shared_conn = sqlite3.connect(
                 "file:sql_sandbox?mode=memory&cache=shared", uri=True, check_same_thread=False
@@ -152,7 +132,6 @@ class DatabaseEngine:
         return conn
 
     def close(self) -> None:
-        """Closes any persistent shared connection."""
         with self._lock:
             if self._shared_conn is not None:
                 try:
@@ -165,12 +144,10 @@ class DatabaseEngine:
         self.close()
 
     def _init_database(self) -> None:
-        """Initializes tables and seeds default dataset."""
         with self._lock:
             conn = self._get_connection()
             cursor = conn.cursor()
             cursor.executescript(SAMPLE_SCHEMA_DDL)
-            
             cursor.execute("SELECT COUNT(*) FROM customers;")
             count = cursor.fetchone()[0]
             if count == 0:
@@ -180,14 +157,11 @@ class DatabaseEngine:
                 conn.close()
 
     def _drop_all_user_tables(self, conn: sqlite3.Connection) -> None:
-        """Drops all non-system SQLite tables and views."""
         cursor = conn.cursor()
         cursor.execute("PRAGMA foreign_keys = OFF;")
-        # Drop views
         cursor.execute("SELECT name FROM sqlite_master WHERE type='view';")
         for row in cursor.fetchall():
             cursor.execute(f'DROP VIEW IF EXISTS "{row[0]}";')
-        # Drop tables
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
         for row in cursor.fetchall():
             cursor.execute(f'DROP TABLE IF EXISTS "{row[0]}";')
@@ -195,7 +169,6 @@ class DatabaseEngine:
         conn.commit()
 
     def reset_database(self) -> Dict[str, Any]:
-        """Wipes sandbox and restores pristine default schema and seed data."""
         with self._lock:
             conn = self._get_connection()
             self._drop_all_user_tables(conn)
@@ -209,17 +182,13 @@ class DatabaseEngine:
                 conn.close()
         return {
             "success": True,
-            "message": "Database reset to default enterprise e-commerce schema.",
+            "message": "Database reset to default schema.",
             "schema_context": self.get_schema_context()
         }
 
     def load_custom_ddl(self, ddl_sql: str) -> Dict[str, Any]:
-        """
-        Loads custom user/jury DDL and optional seed INSERTs into the sandbox.
-        Replaces current tables with the uploaded schema definition.
-        """
         if not ddl_sql or not ddl_sql.strip():
-            return {"success": False, "error": "Provided DDL script is empty."}
+            return {"success": False, "error": "DDL script is empty."}
 
         with self._lock:
             conn = self._get_connection()
@@ -233,7 +202,6 @@ class DatabaseEngine:
                 if self._shared_conn is None:
                     conn.close()
             except Exception as e:
-                # If loading fails, restore default schema to avoid corrupted state
                 try:
                     self._drop_all_user_tables(conn)
                     conn.cursor().executescript(SAMPLE_SCHEMA_DDL)
@@ -245,26 +213,21 @@ class DatabaseEngine:
                     pass
                 return {
                     "success": False,
-                    "error": f"Failed to apply DDL script: {str(e)}",
+                    "error": str(e),
                     "schema_context": self.get_schema_context()
                 }
 
         context = self.get_schema_context()
-        table_count = len(context)
         return {
             "success": True,
-            "message": f"Successfully loaded custom schema with {table_count} table(s).",
-            "table_count": table_count,
+            "message": f"Loaded schema with {len(context)} table(s).",
+            "table_count": len(context),
             "schema_context": context
         }
 
     def load_custom_db_bytes(self, db_bytes: bytes, filename: str = "custom.db") -> Dict[str, Any]:
-        """
-        Loads an uploaded SQLite database file into the sandboxed connection.
-        Clones database in-memory using sqlite3 backup API.
-        """
         if not db_bytes:
-            return {"success": False, "error": "Uploaded database file is empty."}
+            return {"success": False, "error": "Database file is empty."}
 
         with self._lock:
             temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".sqlite")
@@ -273,26 +236,20 @@ class DatabaseEngine:
                 temp_db.flush()
                 temp_db.close()
 
-                # Open temp db and verify it is a valid SQLite file
                 source_conn = sqlite3.connect(temp_db.name)
                 source_cursor = source_conn.cursor()
                 source_cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
-                tables = [r[0] for r in source_cursor.fetchall()]
+                source_cursor.fetchall()
 
                 target_conn = self._get_connection()
                 self._drop_all_user_tables(target_conn)
-
-                # Use SQLite online backup API to copy from temp disk DB to in-memory sandbox
                 source_conn.backup(target_conn)
                 source_conn.close()
 
                 self.is_custom_schema = True
                 self.custom_schema_source = f"file:{filename}"
             except Exception as e:
-                return {
-                    "success": False,
-                    "error": f"Invalid SQLite database file: {str(e)}"
-                }
+                return {"success": False, "error": f"Invalid SQLite database: {str(e)}"}
             finally:
                 if os.path.exists(temp_db.name):
                     try:
@@ -303,13 +260,12 @@ class DatabaseEngine:
         context = self.get_schema_context()
         return {
             "success": True,
-            "message": f"Successfully loaded SQLite database '{filename}' with {len(context)} table(s).",
+            "message": f"Loaded database '{filename}' with {len(context)} table(s).",
             "table_count": len(context),
             "schema_context": context
         }
 
     def get_schema_ddl(self) -> str:
-        """Returns active DDL definitions from sqlite_master."""
         with self._lock:
             conn = self._get_connection()
             try:
@@ -328,7 +284,6 @@ class DatabaseEngine:
                     conn.close()
 
     def get_schema_context(self) -> Dict[str, Any]:
-        """Returns structured metadata for all tables, columns, foreign keys, and preview rows."""
         with self._lock:
             conn = self._get_connection()
             schema_info: Dict[str, Any] = {}
@@ -338,7 +293,6 @@ class DatabaseEngine:
                 tables = [row["name"] for row in cursor.fetchall()]
 
                 for table in tables:
-                    # Columns
                     cursor.execute(f'PRAGMA table_info("{table}");')
                     cols = []
                     for col in cursor.fetchall():
@@ -351,7 +305,6 @@ class DatabaseEngine:
                             "dflt_value": col["dflt_value"]
                         })
 
-                    # Foreign Keys
                     cursor.execute(f'PRAGMA foreign_key_list("{table}");')
                     fks = []
                     for fk in cursor.fetchall():
@@ -362,7 +315,6 @@ class DatabaseEngine:
                             "to": fk["to"]
                         })
 
-                    # Row Count & Samples
                     try:
                         cursor.execute(f'SELECT COUNT(*) FROM "{table}";')
                         total_rows = cursor.fetchone()[0]
@@ -387,7 +339,6 @@ class DatabaseEngine:
             return schema_info
 
     def get_schema_summary_text(self) -> str:
-        """Generates compact, human-readable schema text for LLM prompt context."""
         context = self.get_schema_context()
         lines = []
         for table, meta in context.items():
@@ -404,11 +355,6 @@ class DatabaseEngine:
         dry_run: bool = False,
         timeout_sec: float = 5.0
     ) -> Dict[str, Any]:
-        """
-        Executes a SQL query in the test database sandbox.
-        If read_only or dry_run is True, executes in a rollback transaction to guarantee safety.
-        Returns detailed execution metrics, columns, rows, execution plan, or exact error.
-        """
         with self._lock:
             start_time = time.perf_counter()
             conn = self._get_connection()
@@ -416,7 +362,6 @@ class DatabaseEngine:
                 conn.execute(f"PRAGMA busy_timeout = {int(timeout_sec * 1000)};")
                 cursor = conn.cursor()
                 
-                # Fetch explain query plan first if possible
                 query_plan = []
                 try:
                     plan_cursor = conn.cursor()
@@ -433,18 +378,16 @@ class DatabaseEngine:
 
                 cursor.execute(sql)
                 
-                # Fetch results if query returns rows
                 if cursor.description:
                     columns = [col[0] for col in cursor.description]
                     rows = cursor.fetchall()
-                    serializable_rows = [list(r) for r in rows[:100]] # Limit to 100 rows for preview
+                    serializable_rows = [list(r) for r in rows[:100]]
                     total_rows = len(rows)
                 else:
                     columns = []
                     serializable_rows = []
                     total_rows = cursor.rowcount if cursor.rowcount >= 0 else 0
 
-                # Transaction safety enforcement
                 if not read_only and not dry_run:
                     conn.commit()
                 else:
@@ -493,7 +436,6 @@ class DatabaseEngine:
                     conn.close()
 
     def explain_query_plan(self, sql: str) -> List[Dict[str, Any]]:
-        """Runs SQLite EXPLAIN QUERY PLAN to inspect how query is parsed and executed."""
         with self._lock:
             conn = self._get_connection()
             try:
@@ -515,7 +457,6 @@ class DatabaseEngine:
                     conn.close()
 
 
-# Singleton default sandbox database instance for the session
 _default_engine: Optional[DatabaseEngine] = None
 
 def get_db_engine() -> DatabaseEngine:

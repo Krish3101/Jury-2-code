@@ -10,8 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Header -->
-  <header class="app-header">
+    <header class="app-header">
     <div class="header-left">
       <div class="logo-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -30,8 +29,7 @@
       </div>
     </div>
 
-    <!-- Navigation Tabs -->
-    <nav class="header-tabs">
+        <nav class="header-tabs">
       <button class="tab-btn active" data-tab="workbench" id="tab-nav-workbench">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
         <span>Workbench</span>
@@ -62,14 +60,9 @@
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="app-main">
-    <!-- ========================================== -->
-    <!-- TAB 1: WORKBENCH                           -->
-    <!-- ========================================== -->
-    <section id="tab-workbench" class="tab-pane active">
-      <!-- Minimalist Preset Bar -->
-      <div class="preset-bar">
+    <main class="app-main">
+                <section id="tab-workbench" class="tab-pane active">
+            <div class="preset-bar">
         <div class="preset-bar-main">
           <label for="preset-select" class="preset-label">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -90,10 +83,8 @@
         <div class="preset-desc" id="preset-desc-text">Select a scenario above or type custom SQL below.</div>
       </div>
 
-      <!-- Editor & Console Grid -->
-      <div class="editor-grid">
-        <!-- Left Panel: Input Editor -->
-        <div class="card editor-card">
+            <div class="editor-grid">
+                <div class="card editor-card">
           <div class="card-header">
             <span class="card-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
@@ -123,8 +114,7 @@
           </div>
         </div>
 
-        <!-- Right Panel: Database Error Output -->
-        <div class="card terminal-card">
+                <div class="card terminal-card">
           <div class="card-header">
             <span class="card-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
@@ -138,10 +128,8 @@
         </div>
       </div>
 
-      <!-- Diagnosis & Fix Results -->
-      <div id="results-section" class="results-section hidden">
-        <!-- Diagnosis Overview Card -->
-        <div class="card diagnosis-card">
+            <div id="results-section" class="results-section hidden">
+                <div class="card diagnosis-card">
           <div class="card-header">
             <div class="header-badge-row">
               <span class="badge badge-category" id="res-category">SYNTAX</span>
@@ -176,15 +164,13 @@
             </div>
           </div>
 
-          <!-- Defense in Depth Layer Summary -->
-          <div class="defense-layers-container" id="res-defense-layers">
+                    <div class="defense-layers-container" id="res-defense-layers">
             <span class="diag-label">Security &amp; AST Safety Verification</span>
             <div class="layer-pill-row" id="res-layer-pills"></div>
           </div>
         </div>
 
-        <!-- SQL Diff Card -->
-        <div class="card diff-card">
+                <div class="card diff-card">
           <div class="card-header">
             <span class="card-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
@@ -198,8 +184,7 @@
               <button class="btn-secondary btn-sm" id="btn-copy-fixed">Copy Fixed SQL</button>
             </div>
           </div>
-          <!-- Split Diff Container -->
-          <div class="diff-container" id="diff-container-split">
+                    <div class="diff-container" id="diff-container-split">
             <div class="diff-pane diff-left">
               <div class="diff-pane-title">Original Broken SQL</div>
               <div class="diff-lines" id="diff-left-lines"></div>
@@ -209,14 +194,12 @@
               <div class="diff-lines" id="diff-right-lines"></div>
             </div>
           </div>
-          <!-- Unified Diff Container -->
-          <div class="unified-diff-container hidden" id="diff-container-unified">
+                    <div class="unified-diff-container hidden" id="diff-container-unified">
             <pre class="unified-diff-text" id="diff-unified-text"></pre>
           </div>
         </div>
 
-        <!-- Verified Sandbox Execution Results Table -->
-        <div class="card table-card">
+                <div class="card table-card">
           <div class="card-header">
             <span class="card-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
@@ -232,8 +215,7 @@
             <p class="table-placeholder">Execution results will render here.</p>
           </div>
 
-          <!-- Query Execution Plan Accordion -->
-          <details class="plan-accordion" id="query-plan-details">
+                    <details class="plan-accordion" id="query-plan-details">
             <summary>View SQLite Query Execution Plan (EXPLAIN QUERY PLAN)</summary>
             <div class="plan-content" id="query-plan-content"></div>
           </details>
@@ -241,13 +223,9 @@
       </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- TAB 2: SCHEMA & SANDBOX MANAGER            -->
-    <!-- ========================================== -->
-    <section id="tab-schema" class="tab-pane hidden">
+                <section id="tab-schema" class="tab-pane hidden">
       <div class="schema-manager-grid">
-        <!-- Ingestion Panel -->
-        <div class="card upload-card">
+                <div class="card upload-card">
           <div class="card-header">
             <span class="card-title">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
@@ -261,8 +239,7 @@
             </p>
 
             <div class="upload-options-grid">
-              <!-- DDL Paste / File -->
-              <div class="upload-box">
+                            <div class="upload-box">
                 <h4>Option A: Custom DDL Script (.sql)</h4>
                 <p class="subtext">Paste CREATE TABLE / INSERT statements or pick a file:</p>
                 <textarea id="custom-ddl-input" class="code-textarea" placeholder="CREATE TABLE projects (&#10;    id INTEGER PRIMARY KEY,&#10;    title TEXT NOT NULL&#10;);"></textarea>
@@ -273,8 +250,7 @@
                 </div>
               </div>
 
-              <!-- SQLite .db Binary Upload -->
-              <div class="upload-box">
+                            <div class="upload-box">
                 <h4>Option B: SQLite Database File (.db / .sqlite)</h4>
                 <p class="subtext">Upload a live pre-populated database file for sandbox reflection:</p>
                 <div class="drop-zone" id="db-drop-zone">
@@ -297,8 +273,7 @@
           </div>
         </div>
 
-        <!-- Live Tables Explorer -->
-        <div class="card tables-card">
+                <div class="card tables-card">
           <div class="card-header">
             <span class="card-title">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
@@ -313,10 +288,7 @@
       </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- TAB 3: BENCHMARK SUITE                     -->
-    <!-- ========================================== -->
-    <section id="tab-benchmarks" class="tab-pane hidden">
+                <section id="tab-benchmarks" class="tab-pane hidden">
       <div class="benchmarks-header-row">
         <div>
           <h2>Diagnostic Verification &amp; Benchmark Suite</h2>
@@ -328,8 +300,7 @@
         </button>
       </div>
 
-      <!-- Scorecards Grid -->
-      <div class="scorecards-grid">
+            <div class="scorecards-grid">
         <div class="card score-card">
           <span class="score-title">Overall Accuracy</span>
           <span class="score-number highlight" id="score-accuracy">--%</span>
@@ -352,8 +323,7 @@
         </div>
       </div>
 
-      <!-- Category Breakdown Grid -->
-      <div class="card category-matrix-card">
+            <div class="card category-matrix-card">
         <div class="card-header">
           <span class="card-title">Category-Level Performance Breakdown</span>
         </div>
@@ -362,8 +332,7 @@
         </div>
       </div>
 
-      <!-- Diagnostic Boundary Analysis Matrix -->
-      <div class="card misdiagnosis-matrix-card">
+            <div class="card misdiagnosis-matrix-card">
         <div class="card-header">
           <span class="card-title">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
@@ -415,8 +384,7 @@
         </div>
       </div>
 
-      <!-- Live Test Scenarios Table -->
-      <div class="card benchmark-results-card">
+            <div class="card benchmark-results-card">
         <div class="card-header">
           <span class="card-title">Curated Scenario Test Results</span>
           <div class="filter-group" id="bench-filter-group">
@@ -433,8 +401,7 @@
     </section>
   </main>
 
-  <!-- Export Report Modal -->
-  <div class="modal" id="report-modal">
+    <div class="modal" id="report-modal">
     <div class="modal-dialog card modal-lg">
       <div class="modal-header">
         <h3 class="modal-title">Diagnostic Audit Report</h3>
@@ -453,8 +420,7 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
-  <div class="modal" id="settings-modal">
+    <div class="modal" id="settings-modal">
     <div class="modal-dialog card">
       <div class="modal-header">
         <h3 class="modal-title">Model &amp; Sandbox Configuration</h3>

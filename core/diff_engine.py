@@ -1,15 +1,8 @@
-"""
-SQL Diff Engine
-Computes line-level and token-level diffs between original broken SQL and AI-proposed fixed SQL.
-Formats results for side-by-side web rendering and terminal displays.
-"""
-
 import difflib
 from typing import Any, Dict, List
 
 
 def generate_unified_diff(original_sql: str, fixed_sql: str) -> str:
-    """Generates a standard unified diff string with clean newline separation."""
     orig_lines = [line + "\n" for line in original_sql.strip().splitlines()]
     fixed_lines = [line + "\n" for line in fixed_sql.strip().splitlines()]
     diff = difflib.unified_diff(
@@ -23,15 +16,10 @@ def generate_unified_diff(original_sql: str, fixed_sql: str) -> str:
 
 
 def generate_structured_diff(original_sql: str, fixed_sql: str) -> Dict[str, Any]:
-    """
-    Produces side-by-side line representations with status tags ('unchanged', 'removed', 'added')
-    for direct HTML/CSS rendering.
-    """
     orig_lines = [line.rstrip() for line in original_sql.strip().splitlines()]
     fixed_lines = [line.rstrip() for line in fixed_sql.strip().splitlines()]
 
     matcher = difflib.SequenceMatcher(None, orig_lines, fixed_lines)
-    
     orig_view: List[Dict[str, Any]] = []
     fixed_view: List[Dict[str, Any]] = []
     

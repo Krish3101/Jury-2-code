@@ -1,12 +1,7 @@
-/* ==========================================================================
-   SQL Error Explainer & Fixer — Clean & Minimal Modern Light Theme
-   ========================================================================== */
-
 :root {
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'Fira Code', 'SF Mono', Monaco, Menlo, Consolas, monospace;
 
-  /* Color Palette — Clean, Crisp Modern Light Slate */
   --bg-app: #f8fafc;
   --bg-surface: #ffffff;
   --bg-surface-hover: #f1f5f9;
@@ -49,7 +44,6 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
 }
 
-/* Reset & Box Sizing */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -72,7 +66,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -88,9 +81,6 @@ body {
   background: #94a3b8;
 }
 
-/* ==========================================================================
-   Header
-   ========================================================================== */
 .app-header {
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
@@ -209,9 +199,6 @@ body {
   background-color: var(--accent-emerald);
 }
 
-/* ==========================================================================
-   Main Content Layout
-   ========================================================================== */
 .app-main {
   flex: 1;
   padding: 20px 24px 36px;
@@ -224,9 +211,6 @@ body {
   display: block;
 }
 
-/* ==========================================================================
-   Card Component
-   ========================================================================== */
 .card {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
@@ -264,9 +248,6 @@ body {
   gap: 6px;
 }
 
-/* ==========================================================================
-   Minimalist Preset Bar
-   ========================================================================== */
 .preset-bar {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
@@ -347,9 +328,6 @@ body {
   color: var(--text-muted);
 }
 
-/* ==========================================================================
-   Editor & Terminal Grid
-   ========================================================================== */
 .editor-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -417,7 +395,6 @@ body {
   color: var(--text-secondary);
 }
 
-/* Terminal Card */
 .terminal-card {
   background-color: var(--bg-surface);
 }
@@ -435,7 +412,7 @@ body {
   overflow-y: auto;
   max-height: 230px;
   white-space: pre-wrap;
-  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .terminal-dim {
@@ -446,9 +423,6 @@ body {
   color: var(--accent-emerald);
 }
 
-/* ==========================================================================
-   Buttons
-   ========================================================================== */
 .btn-primary {
   background: #2563eb;
   color: #ffffff;
@@ -501,9 +475,6 @@ body {
   font-size: 0.76rem;
 }
 
-/* ==========================================================================
-   Badges
-   ========================================================================== */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -539,9 +510,6 @@ body {
   border: 1px solid rgba(37, 99, 235, 0.25);
 }
 
-/* ==========================================================================
-   Diagnosis Results Card
-   ========================================================================== */
 .results-section {
   display: flex;
   flex-direction: column;
@@ -612,9 +580,6 @@ body {
   font-weight: 500;
 }
 
-/* ==========================================================================
-   Diff View (Side-by-Side & Unified)
-   ========================================================================== */
 .view-toggle {
   display: inline-flex;
   background-color: #f1f5f9;
@@ -680,7 +645,7 @@ body {
   padding: 3px 8px;
   border-radius: 4px;
   white-space: pre-wrap;
-  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .diff-line.removed {
@@ -715,9 +680,6 @@ body {
   white-space: pre;
 }
 
-/* ==========================================================================
-   Table Card & Query Plan
-   ========================================================================== */
 .execution-metrics {
   display: flex;
   align-items: center;
@@ -805,9 +767,6 @@ body {
   line-height: 1.6;
 }
 
-/* ==========================================================================
-   Schema Inspector Drawer & Settings Modal
-   ========================================================================== */
 .schema-drawer {
   position: fixed;
   top: 0;
@@ -942,7 +901,6 @@ body {
   display: none !important;
 }
 
-/* Responsive */
 @media (max-width: 900px) {
   .editor-grid, .diagnosis-grid, .diff-container {
     grid-template-columns: 1fr;
@@ -953,11 +911,6 @@ body {
   }
 }
 
-/* ==========================================================================
-   Tabs, Schema Manager & Benchmark Matrix Styles
-   ========================================================================== */
-
-/* Header Navigation Tabs */
 .header-tabs {
   display: flex;
   align-items: center;
@@ -995,7 +948,6 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-/* Tab Panes */
 .tab-pane {
   display: block;
 }
@@ -1004,7 +956,6 @@ body {
   display: none !important;
 }
 
-/* Risk Badge & Defense Layers */
 .badge-risk {
   background: rgba(124, 58, 237, 0.1);
   color: var(--accent-purple);
@@ -1049,7 +1000,6 @@ body {
   border-color: var(--accent-rose-border);
 }
 
-/* Toggle Switch Label */
 .toggle-switch-label {
   display: inline-flex;
   align-items: center;
@@ -1064,7 +1014,6 @@ body {
   cursor: pointer;
 }
 
-/* Schema Manager */
 .schema-manager-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -1228,7 +1177,6 @@ body {
   font-weight: 600;
 }
 
-/* Benchmark Matrix Styles */
 .benchmarks-header-row {
   display: flex;
   align-items: center;
@@ -1343,7 +1291,6 @@ body {
   border-color: var(--accent-primary);
 }
 
-/* Report Modal */
 .modal-lg {
   max-width: 800px;
   width: 90%;

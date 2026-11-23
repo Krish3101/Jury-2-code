@@ -1,9 +1,3 @@
-"""
-Consolidated Unit Tests for SQL Error Explainer & Fixer
-Tests DB engine, dynamic DDL/DB ingestion, guardrails, diff engine,
-offline expert heuristics, benchmark runner, and REST API endpoints.
-"""
-
 import json
 import unittest
 from io import BytesIO
@@ -51,14 +45,12 @@ class TestDatabaseEngine(unittest.TestCase):
         self.assertIsInstance(plan, list)
 
     def test_custom_ddl_and_reset(self):
-        # Ingest custom DDL
         res = self.db.load_custom_ddl("CREATE TABLE students (id INT PRIMARY KEY, name TEXT);")
         self.assertTrue(res["success"])
         context = self.db.get_schema_context()
         self.assertIn("students", context)
         self.assertNotIn("customers", context)
 
-        # Reset to default
         res_reset = self.db.reset_database()
         self.assertTrue(res_reset["success"])
         context_reset = self.db.get_schema_context()
@@ -171,17 +163,14 @@ class TestOfflineExpertEngine(unittest.TestCase):
         self.assertEqual(diag["error_category"], "INTEGRITY_VIOLATION")
 
     def test_offline_dialect_translations(self):
-        # ILIKE -> LIKE
         d1 = OfflineExpertEngine.fix("SELECT * FROM customers WHERE name ILIKE '%john%';", "near ILIKE", "")
         self.assertEqual(d1["error_category"], "DIALECT_MISDIAGNOSIS")
         self.assertIn("LIKE", d1["fixed_sql"])
 
-        # TOP N -> LIMIT N
         d2 = OfflineExpertEngine.fix("SELECT TOP 5 * FROM customers;", "near TOP", "")
         self.assertEqual(d2["error_category"], "DIALECT_MISDIAGNOSIS")
         self.assertIn("LIMIT 5", d2["fixed_sql"])
 
-        # NVL -> COALESCE
         d3 = OfflineExpertEngine.fix("SELECT name, NVL(loyalty_points, 0) FROM customers;", "no such function: NVL", "")
         self.assertEqual(d3["error_category"], "DIALECT_MISDIAGNOSIS")
         self.assertIn("COALESCE", d3["fixed_sql"])
@@ -286,7 +275,6 @@ class TestServerEndpoints(unittest.TestCase):
         self.assertIn("HTTP/1.0 200 OK", output)
         self.assertIn('"table_count": 1', output)
 
-        # Reset
         handler_reset = self._create_handler("/api/schema/reset", "POST", {})
         handler_reset.do_POST()
         out_reset = handler_reset.wfile.getvalue().decode("utf-8")
@@ -302,7 +290,7 @@ class TestServerEndpoints(unittest.TestCase):
         output = handler.wfile.getvalue().decode("utf-8")
         self.assertIn("HTTP/1.0 200 OK", output)
         self.assertIn('"markdown"', output)
-        self.assertIn("Diagnostic Audit Report", output)
+        self.assertIn("Diagnostic & Audit Report", output)
 
     def test_post_malformed_json_returns_400(self):
         handler = self._create_handler("/api/run-sql", "POST", body=None)
