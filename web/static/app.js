@@ -1,6 +1,6 @@
 /**
  * Frontend Application Logic for SQL Error Explainer & Fixer
- * Jury Final Edition
+ * SQL Error Explainer & Fixer Frontend Controller
  * Coordinates REST API calls, editor interactions, diff rendering,
  * dynamic schema ingestion, benchmark execution, and diagnostic audit reports.
  */

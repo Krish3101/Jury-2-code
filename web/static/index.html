@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SQL Error Explainer &amp; Fixer — Jury Final Evaluation</title>
+  <title>SQL Error Explainer &amp; Fixer</title>
   <link rel="stylesheet" href="app.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,9 +24,9 @@
       <div>
         <div class="brand-row">
           <h1 class="logo-title">SQL Error Explainer &amp; Fixer</h1>
-          <span class="version-tag">Jury Final Edition</span>
+          <span class="version-tag">v1.2</span>
         </div>
-        <p class="logo-subtitle">AST Guardrails • Dynamic Schema Sandbox • Misdiagnosis Matrix</p>
+        <p class="logo-subtitle">AST Safety Guardrails • Dynamic Sandbox • Schema-Aware Diagnostics</p>
       </div>
     </div>
 
@@ -42,7 +42,7 @@
       </button>
       <button class="tab-btn" data-tab="benchmarks" id="tab-nav-benchmarks">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        <span>Benchmark Matrix</span>
+        <span>Benchmark Suite</span>
       </button>
     </nav>
     
@@ -53,7 +53,7 @@
       </button>
       <button class="nav-btn" id="btn-settings" title="Configure OpenRouter API Key &amp; Models">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        <span>Config</span>
+        <span>Settings</span>
       </button>
       <div class="active-model-pill clickable" id="active-model-badge" title="Click to switch model or configure API key">
         <span class="status-dot"></span>
@@ -87,7 +87,7 @@
             <button type="button" class="chip-btn chip-danger" data-preset="TC-16">DROP Attack</button>
           </div>
         </div>
-        <div class="preset-desc" id="preset-desc-text">Select a preset scenario above or write custom SQL below.</div>
+        <div class="preset-desc" id="preset-desc-text">Select a scenario above or type custom SQL below.</div>
       </div>
 
       <!-- Editor & Console Grid -->
@@ -133,7 +133,7 @@
             <span class="badge" id="terminal-status-badge">Idle</span>
           </div>
           <div class="terminal-body" id="terminal-output">
-            <span class="terminal-dim">// Database error output and execution metrics will display here...</span>
+            <span class="terminal-dim">// Database output and execution metrics will display here...</span>
           </div>
         </div>
       </div>
@@ -171,14 +171,14 @@
               <p class="diag-text" id="res-diff-summary">-</p>
             </div>
             <div class="diag-item">
-              <span class="diag-label">Production Prevention Advice</span>
+              <span class="diag-label">Production Best Practice</span>
               <p class="diag-text highlight" id="res-prevention">-</p>
             </div>
           </div>
 
           <!-- Defense in Depth Layer Summary -->
           <div class="defense-layers-container" id="res-defense-layers">
-            <span class="diag-label">Defense-in-Depth Safety Audit</span>
+            <span class="diag-label">Security &amp; AST Safety Verification</span>
             <div class="layer-pill-row" id="res-layer-pills"></div>
           </div>
         </div>
@@ -205,7 +205,7 @@
               <div class="diff-lines" id="diff-left-lines"></div>
             </div>
             <div class="diff-pane diff-right">
-              <div class="diff-pane-title">AI Corrected SQL (Validated)</div>
+              <div class="diff-pane-title">Corrected SQL (Validated)</div>
               <div class="diff-lines" id="diff-right-lines"></div>
             </div>
           </div>
@@ -220,7 +220,7 @@
           <div class="card-header">
             <span class="card-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              Verified Sandbox Execution
+              Sandbox Execution Verification
             </span>
             <div class="execution-metrics" id="exec-metrics-badge">
               <span class="metric-pill" id="metric-status">Status: SUCCESS</span>
@@ -229,7 +229,7 @@
             </div>
           </div>
           <div class="table-container" id="exec-table-container">
-            <p class="table-placeholder">Execution results table will render here.</p>
+            <p class="table-placeholder">Execution results will render here.</p>
           </div>
 
           <!-- Query Execution Plan Accordion -->
@@ -314,13 +314,13 @@
     </section>
 
     <!-- ========================================== -->
-    <!-- TAB 3: BENCHMARK & MISDIAGNOSIS MATRIX     -->
+    <!-- TAB 3: BENCHMARK SUITE                     -->
     <!-- ========================================== -->
     <section id="tab-benchmarks" class="tab-pane hidden">
       <div class="benchmarks-header-row">
         <div>
-          <h2>Evaluation &amp; Misdiagnosis Matrix</h2>
-          <p class="subtitle">Systematic benchmark suite of 25+ curated broken queries across 8 error categories.</p>
+          <h2>Diagnostic Verification &amp; Benchmark Suite</h2>
+          <p class="subtitle">Systematic evaluation suite of 25 curated queries across 8 error categories.</p>
         </div>
         <button class="btn-primary" id="btn-run-benchmarks">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -362,17 +362,17 @@
         </div>
       </div>
 
-      <!-- "Where Does It Misdiagnose?" Empirical Matrix -->
+      <!-- Diagnostic Boundary Analysis Matrix -->
       <div class="card misdiagnosis-matrix-card">
         <div class="card-header">
           <span class="card-title">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-            Jury Focus: Where Does the System Misdiagnose?
+            Diagnostic Boundary Analysis &amp; Mitigations
           </span>
         </div>
         <div class="card-body">
           <p class="matrix-intro">
-            A critical jury question is: <em>"Where does it misdiagnose?"</em> This matrix documents the boundary conditions where naive LLMs fail, and the architectural safeguards we implemented to resolve them.
+            This matrix documents the boundary conditions where automated SQL models commonly fail, and the architectural safeguards implemented to resolve them.
           </p>
           <div class="table-container">
             <table class="data-table">
@@ -380,8 +380,8 @@
                 <tr>
                   <th>Failure Mode Category</th>
                   <th>Root Cause of Misdiagnosis</th>
-                  <th>Observed LLM Behavior</th>
-                  <th>Our Multi-Layer Mitigation</th>
+                  <th>Observed Model Behavior</th>
+                  <th>Multi-Layer Mitigation</th>
                 </tr>
               </thead>
               <tbody>
@@ -389,18 +389,18 @@
                   <td><strong>Vendor Dialect Specifics</strong></td>
                   <td>Non-standard functions (e.g. Postgres <code>ILIKE</code>, T-SQL <code>TOP N</code>, Oracle <code>NVL</code>)</td>
                   <td>Models trained on web code emit foreign dialect operators unsupported by host SQLite engine.</td>
-                  <td>Dialect-grounded system prompts + rule-assisted dialect AST translation before execution.</td>
+                  <td>Dialect-grounded prompts + rule-assisted dialect AST translation before execution.</td>
                 </tr>
                 <tr>
                   <td><strong>Semantic Ambiguity in Multi-Table Projections</strong></td>
                   <td>Shared column identifiers across parent/child tables (e.g. <code>id</code>, <code>name</code>) without aliases</td>
-                  <td>Without conversational intent, LLM must guess whether author wanted parent or child key.</td>
+                  <td>Without conversational intent, model must guess whether author wanted parent or child key.</td>
                   <td>Schema foreign-key relationship graph traversal + confidence score degradation warnings.</td>
                 </tr>
                 <tr>
                   <td><strong>Correlated Subquery Aggregation</strong></td>
                   <td>Selecting unaggregated column alongside <code>MAX()</code> in SQLite</td>
-                  <td>SQLite returns arbitrary row for unaggregated columns; LLMs fail to realize logic requires a subquery.</td>
+                  <td>SQLite returns arbitrary row for unaggregated columns; models fail to realize logic requires a subquery.</td>
                   <td>ANSI SQL strictness audit flagging non-deterministic projection rows.</td>
                 </tr>
                 <tr>
@@ -441,7 +441,7 @@
         <button class="modal-close" id="btn-close-report-modal">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="subtext">Formal diagnostic evaluation report ready for jury presentation and grading:</p>
+        <p class="subtext">Comprehensive diagnostic evaluation report detailing root cause, side-by-side diff, and execution verification:</p>
         <div class="report-preview-box">
           <pre id="report-markdown-preview"></pre>
         </div>
