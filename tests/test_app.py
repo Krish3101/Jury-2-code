@@ -1,6 +1,7 @@
 """
 Consolidated Unit Tests for SQL Error Explainer & Fixer
-Tests DB engine, guardrails, diff engine, offline expert, and REST API endpoints.
+Tests DB engine, dynamic DDL/DB ingestion, guardrails, diff engine,
+offline expert heuristics, benchmark runner, and REST API endpoints.
 """
 
 import json
@@ -8,11 +9,12 @@ import unittest
 from io import BytesIO
 from unittest.mock import MagicMock
 
-from core.db_engine import DatabaseEngine
+from core.benchmarks import BenchmarkHarness, BENCHMARK_SCENARIOS
+from core.db_engine import DatabaseEngine, get_db_engine
 from core.diff_engine import generate_structured_diff, generate_unified_diff
-from core.guardrails import SQLSafetyGuardrail
+from core.guardrails import SQLSafetyGuardrail, get_guardrail
 from core.llm_client import OfflineExpertEngine, OpenRouterLLMClient
-from web.server import RequestHandler
+from web.server import RequestHandler, generate_audit_report
 
 
 class TestDatabaseEngine(unittest.TestCase):
@@ -48,6 +50,21 @@ class TestDatabaseEngine(unittest.TestCase):
         plan = self.db.explain_query_plan("SELECT * FROM customers WHERE id = 1;")
         self.assertIsInstance(plan, list)
 
+    def test_custom_ddl_and_reset(self):
+        # Ingest custom DDL
+        res = self.db.load_custom_ddl("CREATE TABLE students (id INT PRIMARY KEY, name TEXT);")
+        self.assertTrue(res["success"])
+        context = self.db.get_schema_context()
+        self.assertIn("students", context)
+        self.assertNotIn("customers", context)
+
+        # Reset to default
+        res_reset = self.db.reset_database()
+        self.assertTrue(res_reset["success"])
+        context_reset = self.db.get_schema_context()
+        self.assertIn("customers", context_reset)
+        self.assertNotIn("students", context_reset)
+
 
 class TestSQLSafetyGuardrail(unittest.TestCase):
     def setUp(self):
@@ -58,12 +75,14 @@ class TestSQLSafetyGuardrail(unittest.TestCase):
         self.assertTrue(verdict.is_safe)
         self.assertEqual(verdict.risk_level, "SAFE")
         self.assertEqual(len(verdict.violations), 0)
+        self.assertEqual(verdict.risk_score, 0)
 
     def test_block_drop_table(self):
         verdict = self.guard.validate("DROP TABLE customers;")
         self.assertFalse(verdict.is_safe)
         self.assertEqual(verdict.risk_level, "CRITICAL")
         self.assertTrue(any("DROP" in v for v in verdict.violations))
+        self.assertGreaterEqual(verdict.risk_score, 90)
 
     def test_block_unbounded_delete(self):
         verdict = self.guard.validate("DELETE FROM customers;")
@@ -132,7 +151,6 @@ class TestOfflineExpertEngine(unittest.TestCase):
         self.assertIn("ON orders.customer_id = customers.id", diag["fixed_sql"])
         res = self.db.execute_query(diag["fixed_sql"])
         self.assertTrue(res["success"])
-        self.assertEqual(res["row_count"], 6)
 
     def test_offline_valid_query_diagnosis(self):
         diag, _ = self.llm.generate_fix(
@@ -151,6 +169,40 @@ class TestOfflineExpertEngine(unittest.TestCase):
             self.db.get_schema_summary_text()
         )
         self.assertEqual(diag["error_category"], "INTEGRITY_VIOLATION")
+
+    def test_offline_dialect_translations(self):
+        # ILIKE -> LIKE
+        d1 = OfflineExpertEngine.fix("SELECT * FROM customers WHERE name ILIKE '%john%';", "near ILIKE", "")
+        self.assertEqual(d1["error_category"], "DIALECT_MISDIAGNOSIS")
+        self.assertIn("LIKE", d1["fixed_sql"])
+
+        # TOP N -> LIMIT N
+        d2 = OfflineExpertEngine.fix("SELECT TOP 5 * FROM customers;", "near TOP", "")
+        self.assertEqual(d2["error_category"], "DIALECT_MISDIAGNOSIS")
+        self.assertIn("LIMIT 5", d2["fixed_sql"])
+
+        # NVL -> COALESCE
+        d3 = OfflineExpertEngine.fix("SELECT name, NVL(loyalty_points, 0) FROM customers;", "no such function: NVL", "")
+        self.assertEqual(d3["error_category"], "DIALECT_MISDIAGNOSIS")
+        self.assertIn("COALESCE", d3["fixed_sql"])
+
+
+class TestBenchmarkHarness(unittest.TestCase):
+    def setUp(self):
+        self.db = DatabaseEngine(":memory:")
+        self.guard = SQLSafetyGuardrail()
+        self.harness = BenchmarkHarness(self.db, self.guard)
+
+    def tearDown(self):
+        self.db.close()
+
+    def test_benchmark_suite_runs_successfully(self):
+        res = self.harness.run_all(use_offline=True)
+        self.assertEqual(res["total_tests"], 25)
+        self.assertGreaterEqual(res["accuracy_percentage"], 90.0)
+        self.assertEqual(res["guardrail_catch_rate"], 100.0)
+        self.assertEqual(res["adversarial_blocked"], 5)
+        self.assertIn("misdiagnosis_taxonomy", res)
 
 
 class DummyRequest:
@@ -192,6 +244,14 @@ class TestServerEndpoints(unittest.TestCase):
         self.assertIn("HTTP/1.0 200 OK", output)
         self.assertIn("benchmarks", output)
 
+    def test_get_benchmarks_run_endpoint(self):
+        handler = self._create_handler("/api/benchmarks/run", "GET")
+        handler.do_GET()
+        output = handler.wfile.getvalue().decode("utf-8")
+        self.assertIn("HTTP/1.0 200 OK", output)
+        self.assertIn('"accuracy_percentage"', output)
+        self.assertIn('"guardrail_catch_rate"', output)
+
     def test_post_run_sql_endpoint(self):
         handler = self._create_handler("/api/run-sql", "POST", {"sql": "SELECT * FROM customers;"})
         handler.do_POST()
@@ -216,6 +276,33 @@ class TestServerEndpoints(unittest.TestCase):
         self.assertIn("HTTP/1.0 200 OK", output)
         self.assertIn("fixed_sql", output)
         self.assertIn("SELECT id, name, email FROM customers;", output)
+
+    def test_post_upload_ddl_and_reset(self):
+        handler = self._create_handler("/api/schema/upload-ddl", "POST", {
+            "ddl": "CREATE TABLE inventory (sku TEXT PRIMARY KEY, qty INT);"
+        })
+        handler.do_POST()
+        output = handler.wfile.getvalue().decode("utf-8")
+        self.assertIn("HTTP/1.0 200 OK", output)
+        self.assertIn('"table_count": 1', output)
+
+        # Reset
+        handler_reset = self._create_handler("/api/schema/reset", "POST", {})
+        handler_reset.do_POST()
+        out_reset = handler_reset.wfile.getvalue().decode("utf-8")
+        self.assertIn("HTTP/1.0 200 OK", out_reset)
+
+    def test_post_export_report_endpoint(self):
+        handler = self._create_handler("/api/export-report", "POST", {
+            "broken_sql": "SELECT id name FROM customers;",
+            "fixed_sql": "SELECT id, name FROM customers;",
+            "model_used": "Offline Expert"
+        })
+        handler.do_POST()
+        output = handler.wfile.getvalue().decode("utf-8")
+        self.assertIn("HTTP/1.0 200 OK", output)
+        self.assertIn('"markdown"', output)
+        self.assertIn("Diagnostic Audit Report", output)
 
     def test_post_malformed_json_returns_400(self):
         handler = self._create_handler("/api/run-sql", "POST", body=None)

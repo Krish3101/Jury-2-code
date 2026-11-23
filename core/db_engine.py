@@ -1,12 +1,16 @@
 """
 Database Engine & Sandboxing Module
-Provides schema management, mock data seeding, query execution, and query plan analysis.
+Provides schema management, mock data seeding, query execution, dry-run simulation,
+and dynamic schema/database ingestion (.sql DDL & .db binary files).
 """
 
+import io
+import os
 import sqlite3
+import tempfile
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 SAMPLE_SCHEMA_DDL = """
@@ -121,11 +125,13 @@ INSERT INTO order_items (order_id, product_name, quantity, unit_price) VALUES
 
 
 class DatabaseEngine:
-    """Manages an embedded SQLite database sandbox with pre-loaded enterprise schemas."""
+    """Manages an embedded SQLite database sandbox with dynamic schema loading and isolation."""
 
     def __init__(self, db_path: str = ":memory:"):
         self.db_path = db_path
         self._lock = threading.Lock()
+        self.is_custom_schema = False
+        self.custom_schema_source = "default"
         # For :memory:, use shared uri or hold persistent connection
         if db_path == ":memory:":
             self._shared_conn = sqlite3.connect(
@@ -159,13 +165,12 @@ class DatabaseEngine:
         self.close()
 
     def _init_database(self) -> None:
-        """Initializes tables and seeds mock dataset."""
+        """Initializes tables and seeds default dataset."""
         with self._lock:
             conn = self._get_connection()
             cursor = conn.cursor()
             cursor.executescript(SAMPLE_SCHEMA_DDL)
             
-            # Check if customers table is empty before seeding
             cursor.execute("SELECT COUNT(*) FROM customers;")
             count = cursor.fetchone()[0]
             if count == 0:
@@ -174,65 +179,201 @@ class DatabaseEngine:
             if self._shared_conn is None:
                 conn.close()
 
-    def reset_database(self) -> None:
-        """Wipes and re-seeds database to known pristine state."""
+    def _drop_all_user_tables(self, conn: sqlite3.Connection) -> None:
+        """Drops all non-system SQLite tables and views."""
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA foreign_keys = OFF;")
+        # Drop views
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='view';")
+        for row in cursor.fetchall():
+            cursor.execute(f'DROP VIEW IF EXISTS "{row[0]}";')
+        # Drop tables
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
+        for row in cursor.fetchall():
+            cursor.execute(f'DROP TABLE IF EXISTS "{row[0]}";')
+        cursor.execute("PRAGMA foreign_keys = ON;")
+        conn.commit()
+
+    def reset_database(self) -> Dict[str, Any]:
+        """Wipes sandbox and restores pristine default schema and seed data."""
         with self._lock:
             conn = self._get_connection()
+            self._drop_all_user_tables(conn)
             cursor = conn.cursor()
-            tables = ["order_items", "orders", "employees", "departments", "customers"]
-            for tbl in tables:
-                cursor.execute(f"DROP TABLE IF EXISTS {tbl};")
             cursor.executescript(SAMPLE_SCHEMA_DDL)
             cursor.executescript(SAMPLE_DATA_SEED)
             conn.commit()
+            self.is_custom_schema = False
+            self.custom_schema_source = "default"
             if self._shared_conn is None:
                 conn.close()
+        return {
+            "success": True,
+            "message": "Database reset to default enterprise e-commerce schema.",
+            "schema_context": self.get_schema_context()
+        }
+
+    def load_custom_ddl(self, ddl_sql: str) -> Dict[str, Any]:
+        """
+        Loads custom user/jury DDL and optional seed INSERTs into the sandbox.
+        Replaces current tables with the uploaded schema definition.
+        """
+        if not ddl_sql or not ddl_sql.strip():
+            return {"success": False, "error": "Provided DDL script is empty."}
+
+        with self._lock:
+            conn = self._get_connection()
+            try:
+                self._drop_all_user_tables(conn)
+                cursor = conn.cursor()
+                cursor.executescript(ddl_sql)
+                conn.commit()
+                self.is_custom_schema = True
+                self.custom_schema_source = "custom_ddl"
+                if self._shared_conn is None:
+                    conn.close()
+            except Exception as e:
+                # If loading fails, restore default schema to avoid corrupted state
+                try:
+                    self._drop_all_user_tables(conn)
+                    conn.cursor().executescript(SAMPLE_SCHEMA_DDL)
+                    conn.cursor().executescript(SAMPLE_DATA_SEED)
+                    conn.commit()
+                    self.is_custom_schema = False
+                    self.custom_schema_source = "default"
+                except Exception:
+                    pass
+                return {
+                    "success": False,
+                    "error": f"Failed to apply DDL script: {str(e)}",
+                    "schema_context": self.get_schema_context()
+                }
+
+        context = self.get_schema_context()
+        table_count = len(context)
+        return {
+            "success": True,
+            "message": f"Successfully loaded custom schema with {table_count} table(s).",
+            "table_count": table_count,
+            "schema_context": context
+        }
+
+    def load_custom_db_bytes(self, db_bytes: bytes, filename: str = "custom.db") -> Dict[str, Any]:
+        """
+        Loads an uploaded SQLite database file into the sandboxed connection.
+        Clones database in-memory using sqlite3 backup API.
+        """
+        if not db_bytes:
+            return {"success": False, "error": "Uploaded database file is empty."}
+
+        with self._lock:
+            temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".sqlite")
+            try:
+                temp_db.write(db_bytes)
+                temp_db.flush()
+                temp_db.close()
+
+                # Open temp db and verify it is a valid SQLite file
+                source_conn = sqlite3.connect(temp_db.name)
+                source_cursor = source_conn.cursor()
+                source_cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
+                tables = [r[0] for r in source_cursor.fetchall()]
+
+                target_conn = self._get_connection()
+                self._drop_all_user_tables(target_conn)
+
+                # Use SQLite online backup API to copy from temp disk DB to in-memory sandbox
+                source_conn.backup(target_conn)
+                source_conn.close()
+
+                self.is_custom_schema = True
+                self.custom_schema_source = f"file:{filename}"
+            except Exception as e:
+                return {
+                    "success": False,
+                    "error": f"Invalid SQLite database file: {str(e)}"
+                }
+            finally:
+                if os.path.exists(temp_db.name):
+                    try:
+                        os.unlink(temp_db.name)
+                    except Exception:
+                        pass
+
+        context = self.get_schema_context()
+        return {
+            "success": True,
+            "message": f"Successfully loaded SQLite database '{filename}' with {len(context)} table(s).",
+            "table_count": len(context),
+            "schema_context": context
+        }
 
     def get_schema_ddl(self) -> str:
-        """Returns the clean DDL definitions of all tables."""
-        return SAMPLE_SCHEMA_DDL.strip()
+        """Returns active DDL definitions from sqlite_master."""
+        with self._lock:
+            conn = self._get_connection()
+            try:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT sql FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%' AND sql IS NOT NULL ORDER BY type DESC, name;"
+                )
+                ddls = [row[0] + ";" for row in cursor.fetchall() if row[0]]
+                if ddls:
+                    return "\n\n".join(ddls)
+                return SAMPLE_SCHEMA_DDL.strip()
+            except Exception:
+                return SAMPLE_SCHEMA_DDL.strip()
+            finally:
+                if self._shared_conn is None:
+                    conn.close()
 
     def get_schema_context(self) -> Dict[str, Any]:
-        """Returns structured metadata for all tables, columns, foreign keys, and row previews."""
+        """Returns structured metadata for all tables, columns, foreign keys, and preview rows."""
         with self._lock:
             conn = self._get_connection()
             schema_info: Dict[str, Any] = {}
             try:
                 cursor = conn.cursor()
-                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name;")
                 tables = [row["name"] for row in cursor.fetchall()]
 
                 for table in tables:
                     # Columns
-                    cursor.execute(f"PRAGMA table_info({table});")
+                    cursor.execute(f'PRAGMA table_info("{table}");')
                     cols = []
                     for col in cursor.fetchall():
                         cols.append({
                             "cid": col["cid"],
                             "name": col["name"],
-                            "type": col["type"],
+                            "type": col["type"] or "TEXT",
                             "notnull": bool(col["notnull"]),
                             "pk": bool(col["pk"]),
                             "dflt_value": col["dflt_value"]
                         })
 
                     # Foreign Keys
-                    cursor.execute(f"PRAGMA foreign_key_list({table});")
+                    cursor.execute(f'PRAGMA foreign_key_list("{table}");')
                     fks = []
                     for fk in cursor.fetchall():
                         fks.append({
+                            "id": fk["id"],
                             "table": fk["table"],
                             "from": fk["from"],
                             "to": fk["to"]
                         })
 
-                    # Sample Rows (up to 3)
-                    cursor.execute(f"SELECT * FROM {table} LIMIT 3;")
-                    sample_rows = [dict(row) for row in cursor.fetchall()]
+                    # Row Count & Samples
+                    try:
+                        cursor.execute(f'SELECT COUNT(*) FROM "{table}";')
+                        total_rows = cursor.fetchone()[0]
+                    except Exception:
+                        total_rows = 0
 
-                    # Row count
-                    cursor.execute(f"SELECT COUNT(*) FROM {table};")
-                    total_rows = cursor.fetchone()[0]
+                    try:
+                        cursor.execute(f'SELECT * FROM "{table}" LIMIT 5;')
+                        sample_rows = [list(r) for r in cursor.fetchall()]
+                    except Exception:
+                        sample_rows = []
 
                     schema_info[table] = {
                         "columns": cols,
@@ -256,11 +397,17 @@ class DatabaseEngine:
                 lines.append(f"  FK: `{table}.{fk['from']}` -> `{fk['table']}.{fk['to']}`")
         return "\n".join(lines)
 
-    def execute_query(self, sql: str, read_only: bool = True, timeout_sec: float = 5.0) -> Dict[str, Any]:
+    def execute_query(
+        self,
+        sql: str,
+        read_only: bool = True,
+        dry_run: bool = False,
+        timeout_sec: float = 5.0
+    ) -> Dict[str, Any]:
         """
-        Executes a SQL query in the test database.
-        If read_only is True, executes in a rollback transaction to avoid unintended mutations.
-        Returns detailed execution metrics, columns, rows, or exact error.
+        Executes a SQL query in the test database sandbox.
+        If read_only or dry_run is True, executes in a rollback transaction to guarantee safety.
+        Returns detailed execution metrics, columns, rows, execution plan, or exact error.
         """
         with self._lock:
             start_time = time.perf_counter()
@@ -268,13 +415,28 @@ class DatabaseEngine:
             try:
                 conn.execute(f"PRAGMA busy_timeout = {int(timeout_sec * 1000)};")
                 cursor = conn.cursor()
+                
+                # Fetch explain query plan first if possible
+                query_plan = []
+                try:
+                    plan_cursor = conn.cursor()
+                    plan_cursor.execute(f"EXPLAIN QUERY PLAN {sql}")
+                    for r in plan_cursor.fetchall():
+                        query_plan.append({
+                            "id": r[0],
+                            "parent": r[1],
+                            "notused": r[2],
+                            "detail": r[3]
+                        })
+                except Exception:
+                    pass
+
                 cursor.execute(sql)
                 
                 # Fetch results if query returns rows
                 if cursor.description:
                     columns = [col[0] for col in cursor.description]
                     rows = cursor.fetchall()
-                    # Convert sqlite3.Row to standard lists/dicts
                     serializable_rows = [list(r) for r in rows[:100]] # Limit to 100 rows for preview
                     total_rows = len(rows)
                 else:
@@ -282,7 +444,8 @@ class DatabaseEngine:
                     serializable_rows = []
                     total_rows = cursor.rowcount if cursor.rowcount >= 0 else 0
 
-                if not read_only:
+                # Transaction safety enforcement
+                if not read_only and not dry_run:
                     conn.commit()
                 else:
                     conn.rollback()
@@ -295,7 +458,9 @@ class DatabaseEngine:
                     "row_count": total_rows,
                     "execution_time_ms": exec_time_ms,
                     "error": None,
-                    "error_type": None
+                    "error_type": None,
+                    "dry_run": dry_run or read_only,
+                    "query_plan": query_plan
                 }
             except (sqlite3.OperationalError, sqlite3.IntegrityError, sqlite3.ProgrammingError) as err:
                 exec_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
@@ -306,7 +471,9 @@ class DatabaseEngine:
                     "row_count": 0,
                     "execution_time_ms": exec_time_ms,
                     "error": str(err),
-                    "error_type": err.__class__.__name__
+                    "error_type": err.__class__.__name__,
+                    "dry_run": dry_run or read_only,
+                    "query_plan": []
                 }
             except Exception as err:
                 exec_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
@@ -317,7 +484,9 @@ class DatabaseEngine:
                     "row_count": 0,
                     "execution_time_ms": exec_time_ms,
                     "error": f"Execution error: {str(err)}",
-                    "error_type": "GeneralExecutionError"
+                    "error_type": "GeneralExecutionError",
+                    "dry_run": dry_run or read_only,
+                    "query_plan": []
                 }
             finally:
                 if self._shared_conn is None:

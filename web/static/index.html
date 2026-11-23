@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SQL Error Explainer &amp; Fixer</title>
+  <title>SQL Error Explainer &amp; Fixer — Jury Final Evaluation</title>
   <link rel="stylesheet" href="app.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
   <header class="app-header">
     <div class="header-left">
       <div class="logo-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
           <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
           <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
@@ -24,16 +24,32 @@
       <div>
         <div class="brand-row">
           <h1 class="logo-title">SQL Error Explainer &amp; Fixer</h1>
-          <span class="version-tag">Sandbox Active</span>
+          <span class="version-tag">Jury Final Edition</span>
         </div>
-        <p class="logo-subtitle">Intelligent Diagnostics • AST Safety Guardrails • Verified Remediation</p>
+        <p class="logo-subtitle">AST Guardrails • Dynamic Schema Sandbox • Misdiagnosis Matrix</p>
       </div>
     </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="header-tabs">
+      <button class="tab-btn active" data-tab="workbench" id="tab-nav-workbench">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        <span>Workbench</span>
+      </button>
+      <button class="tab-btn" data-tab="schema" id="tab-nav-schema">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+        <span>Schema &amp; Sandbox</span>
+      </button>
+      <button class="tab-btn" data-tab="benchmarks" id="tab-nav-benchmarks">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <span>Benchmark Matrix</span>
+      </button>
+    </nav>
     
     <div class="header-right">
-      <button class="nav-btn" id="btn-schema" title="Inspect Database Tables &amp; Sample Data">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18"></path><path d="M9 21V9"></path></svg>
-        <span>Schema</span>
+      <button class="nav-btn" id="btn-export-quick" title="Export Diagnosis Audit Report">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span>Audit Report</span>
       </button>
       <button class="nav-btn" id="btn-settings" title="Configure OpenRouter API Key &amp; Models">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -46,9 +62,12 @@
     </div>
   </header>
 
-  <!-- Main Container: Workbench Exclusively -->
+  <!-- Main Container -->
   <main class="app-main">
-    <section id="tab-workbench" class="tab-content active">
+    <!-- ========================================== -->
+    <!-- TAB 1: WORKBENCH                           -->
+    <!-- ========================================== -->
+    <section id="tab-workbench" class="tab-pane active">
       <!-- Minimalist Preset Bar -->
       <div class="preset-bar">
         <div class="preset-bar-main">
@@ -57,17 +76,18 @@
             Presets:
           </label>
           <select id="preset-select" class="preset-dropdown">
-            <option value="">-- Choose a broken SQL scenario --</option>
+            <option value="">-- Choose a broken SQL scenario (25 available) --</option>
           </select>
           <div class="quick-preset-chips" id="quick-preset-chips">
             <button type="button" class="chip-btn" data-preset="TC-01">Missing Comma</button>
-            <button type="button" class="chip-btn" data-preset="TC-04">Typo Column</button>
-            <button type="button" class="chip-btn" data-preset="TC-06">Ambiguous JOIN</button>
-            <button type="button" class="chip-btn" data-preset="TC-10">Missing JOIN ON</button>
-            <button type="button" class="chip-btn chip-danger" data-preset="TC-11">DROP Attack</button>
+            <button type="button" class="chip-btn" data-preset="TC-05">Column Typo</button>
+            <button type="button" class="chip-btn" data-preset="TC-08">Missing JOIN</button>
+            <button type="button" class="chip-btn" data-preset="TC-21">Postgres ILIKE</button>
+            <button type="button" class="chip-btn" data-preset="TC-22">T-SQL TOP</button>
+            <button type="button" class="chip-btn chip-danger" data-preset="TC-16">DROP Attack</button>
           </div>
         </div>
-        <div class="preset-desc" id="preset-desc-text">Select a preset scenario above or type custom SQL below.</div>
+        <div class="preset-desc" id="preset-desc-text">Select a preset scenario above or write custom SQL below.</div>
       </div>
 
       <!-- Editor & Console Grid -->
@@ -80,6 +100,10 @@
               SQL Query Input
             </span>
             <div class="card-actions">
+              <label class="toggle-switch-label" title="Enable dry-run rollback transaction to protect database state">
+                <input type="checkbox" id="check-dry-run" checked>
+                <span>Dry-Run Rollback</span>
+              </label>
               <button class="btn-secondary btn-sm" id="btn-clear-sql">Clear</button>
               <button class="btn-secondary btn-sm" id="btn-run-raw" title="Run raw query against sandbox to capture DB error">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -109,7 +133,7 @@
             <span class="badge" id="terminal-status-badge">Idle</span>
           </div>
           <div class="terminal-body" id="terminal-output">
-            <span class="terminal-dim">// Database error output and stack trace will display here...</span>
+            <span class="terminal-dim">// Database error output and execution metrics will display here...</span>
           </div>
         </div>
       </div>
@@ -122,12 +146,14 @@
             <div class="header-badge-row">
               <span class="badge badge-category" id="res-category">SYNTAX</span>
               <span class="badge badge-safety" id="res-safety">SAFE</span>
+              <span class="badge badge-risk" id="res-risk-score">Risk: 0/100</span>
               <span class="badge badge-model" id="res-model">OpenRouter</span>
             </div>
-            <div class="confidence-indicator">
-              <span>Confidence:</span>
-              <div class="confidence-bar-bg"><div class="confidence-bar-fill" id="res-confidence-bar"></div></div>
-              <span id="res-confidence-text">95%</span>
+            <div class="card-actions">
+              <button class="btn-secondary btn-sm" id="btn-export-single">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Export Report
+              </button>
             </div>
           </div>
 
@@ -148,6 +174,12 @@
               <span class="diag-label">Production Prevention Advice</span>
               <p class="diag-text highlight" id="res-prevention">-</p>
             </div>
+          </div>
+
+          <!-- Defense in Depth Layer Summary -->
+          <div class="defense-layers-container" id="res-defense-layers">
+            <span class="diag-label">Defense-in-Depth Safety Audit</span>
+            <div class="layer-pill-row" id="res-layer-pills"></div>
           </div>
         </div>
 
@@ -208,65 +240,255 @@
         </div>
       </div>
     </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: SCHEMA & SANDBOX MANAGER            -->
+    <!-- ========================================== -->
+    <section id="tab-schema" class="tab-pane hidden">
+      <div class="schema-manager-grid">
+        <!-- Ingestion Panel -->
+        <div class="card upload-card">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Dynamic Schema &amp; Database Ingestion
+            </span>
+            <span class="badge" id="schema-status-badge">Default Schema</span>
+          </div>
+          <div class="card-body">
+            <p class="card-desc">
+              Test queries against your own database schemas. Upload a custom <code>.sql</code> DDL script or an existing SQLite binary <code>.db</code> file.
+            </p>
+
+            <div class="upload-options-grid">
+              <!-- DDL Paste / File -->
+              <div class="upload-box">
+                <h4>Option A: Custom DDL Script (.sql)</h4>
+                <p class="subtext">Paste CREATE TABLE / INSERT statements or pick a file:</p>
+                <textarea id="custom-ddl-input" class="code-textarea" placeholder="CREATE TABLE projects (&#10;    id INTEGER PRIMARY KEY,&#10;    title TEXT NOT NULL&#10;);"></textarea>
+                <div class="box-actions">
+                  <input type="file" id="file-ddl" accept=".sql,.txt" style="display:none">
+                  <button type="button" class="btn-secondary btn-sm" id="btn-pick-ddl">Browse .sql</button>
+                  <button type="button" class="btn-primary btn-sm" id="btn-deploy-ddl">Deploy DDL Schema</button>
+                </div>
+              </div>
+
+              <!-- SQLite .db Binary Upload -->
+              <div class="upload-box">
+                <h4>Option B: SQLite Database File (.db / .sqlite)</h4>
+                <p class="subtext">Upload a live pre-populated database file for sandbox reflection:</p>
+                <div class="drop-zone" id="db-drop-zone">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                  <p>Drag &amp; drop <code>.db</code> or <code>.sqlite</code> file here</p>
+                  <input type="file" id="file-db" accept=".db,.sqlite,.sqlite3" style="display:none">
+                  <button type="button" class="btn-secondary btn-sm" id="btn-pick-db">Select DB File</button>
+                </div>
+                <div id="db-upload-status" class="upload-feedback"></div>
+              </div>
+            </div>
+
+            <div class="schema-reset-bar">
+              <span>Need to revert changes?</span>
+              <button class="btn-danger btn-sm" id="btn-reset-schema-main">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                Restore Pristine Default Database
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Tables Explorer -->
+        <div class="card tables-card">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+              Active Tables &amp; Relational Schema
+            </span>
+            <span class="badge badge-category" id="tables-count-badge">5 Tables</span>
+          </div>
+          <div class="card-body tables-content" id="active-tables-container">
+            <p class="terminal-dim">Loading schema definitions...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: BENCHMARK & MISDIAGNOSIS MATRIX     -->
+    <!-- ========================================== -->
+    <section id="tab-benchmarks" class="tab-pane hidden">
+      <div class="benchmarks-header-row">
+        <div>
+          <h2>Evaluation &amp; Misdiagnosis Matrix</h2>
+          <p class="subtitle">Systematic benchmark suite of 25+ curated broken queries across 8 error categories.</p>
+        </div>
+        <button class="btn-primary" id="btn-run-benchmarks">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Run Full 25-Test Benchmark Suite
+        </button>
+      </div>
+
+      <!-- Scorecards Grid -->
+      <div class="scorecards-grid">
+        <div class="card score-card">
+          <span class="score-title">Overall Accuracy</span>
+          <span class="score-number highlight" id="score-accuracy">--%</span>
+          <span class="score-subtext">Pass rate on syntax &amp; schema tests</span>
+        </div>
+        <div class="card score-card">
+          <span class="score-title">Guardrail Intercept Rate</span>
+          <span class="score-number success" id="score-guardrail">--%</span>
+          <span class="score-subtext">100% catch rate on adversarial attacks</span>
+        </div>
+        <div class="card score-card">
+          <span class="score-title">Evaluated Scenarios</span>
+          <span class="score-number" id="score-total">25</span>
+          <span class="score-subtext">Across 8 distinct error categories</span>
+        </div>
+        <div class="card score-card">
+          <span class="score-title">Total Benchmark Latency</span>
+          <span class="score-number" id="score-latency">-- ms</span>
+          <span class="score-subtext">Average per-test execution speed</span>
+        </div>
+      </div>
+
+      <!-- Category Breakdown Grid -->
+      <div class="card category-matrix-card">
+        <div class="card-header">
+          <span class="card-title">Category-Level Performance Breakdown</span>
+        </div>
+        <div class="category-chips-grid" id="category-chips-container">
+          <span class="terminal-dim">Click "Run Full Benchmark Suite" to compute performance metrics.</span>
+        </div>
+      </div>
+
+      <!-- "Where Does It Misdiagnose?" Empirical Matrix -->
+      <div class="card misdiagnosis-matrix-card">
+        <div class="card-header">
+          <span class="card-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            Jury Focus: Where Does the System Misdiagnose?
+          </span>
+        </div>
+        <div class="card-body">
+          <p class="matrix-intro">
+            A critical jury question is: <em>"Where does it misdiagnose?"</em> This matrix documents the boundary conditions where naive LLMs fail, and the architectural safeguards we implemented to resolve them.
+          </p>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Failure Mode Category</th>
+                  <th>Root Cause of Misdiagnosis</th>
+                  <th>Observed LLM Behavior</th>
+                  <th>Our Multi-Layer Mitigation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Vendor Dialect Specifics</strong></td>
+                  <td>Non-standard functions (e.g. Postgres <code>ILIKE</code>, T-SQL <code>TOP N</code>, Oracle <code>NVL</code>)</td>
+                  <td>Models trained on web code emit foreign dialect operators unsupported by host SQLite engine.</td>
+                  <td>Dialect-grounded system prompts + rule-assisted dialect AST translation before execution.</td>
+                </tr>
+                <tr>
+                  <td><strong>Semantic Ambiguity in Multi-Table Projections</strong></td>
+                  <td>Shared column identifiers across parent/child tables (e.g. <code>id</code>, <code>name</code>) without aliases</td>
+                  <td>Without conversational intent, LLM must guess whether author wanted parent or child key.</td>
+                  <td>Schema foreign-key relationship graph traversal + confidence score degradation warnings.</td>
+                </tr>
+                <tr>
+                  <td><strong>Correlated Subquery Aggregation</strong></td>
+                  <td>Selecting unaggregated column alongside <code>MAX()</code> in SQLite</td>
+                  <td>SQLite returns arbitrary row for unaggregated columns; LLMs fail to realize logic requires a subquery.</td>
+                  <td>ANSI SQL strictness audit flagging non-deterministic projection rows.</td>
+                </tr>
+                <tr>
+                  <td><strong>Adversarial DDL Piggybacking</strong></td>
+                  <td>Stacked semicolons chaining <code>DROP TABLE</code> or <code>1=1</code></td>
+                  <td>Naive models attempt to format or complete the malicious command.</td>
+                  <td><strong>AST Safety Guardrail:</strong> Zero LLM execution permitted; intercepted and blocked at parser layer.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Test Scenarios Table -->
+      <div class="card benchmark-results-card">
+        <div class="card-header">
+          <span class="card-title">Curated Scenario Test Results</span>
+          <div class="filter-group" id="bench-filter-group">
+            <button class="btn-chip active" data-filter="ALL">All (25)</button>
+            <button class="btn-chip" data-filter="PASSED">Passed</button>
+            <button class="btn-chip" data-filter="GUARDRAIL">Guardrail Blocked</button>
+            <button class="btn-chip" data-filter="DIALECT">Dialect Edge Cases</button>
+          </div>
+        </div>
+        <div class="table-container" id="benchmark-table-container">
+          <p class="terminal-dim" style="padding: 1.5rem;">Click "Run Full Benchmark Suite" to stream live results.</p>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <!-- Schema Inspector Slide-out Drawer -->
-  <aside class="schema-drawer" id="schema-drawer">
-    <div class="drawer-header">
-      <h3 class="drawer-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
-        Database Schema &amp; Sandbox Data
-      </h3>
-      <button class="drawer-close" id="btn-close-drawer">&times;</button>
+  <!-- Export Report Modal -->
+  <div class="modal" id="report-modal">
+    <div class="modal-dialog card modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">Diagnostic Audit Report</h3>
+        <button class="modal-close" id="btn-close-report-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="subtext">Formal diagnostic evaluation report ready for jury presentation and grading:</p>
+        <div class="report-preview-box">
+          <pre id="report-markdown-preview"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-copy-report">Copy Markdown</button>
+        <button class="btn-primary" id="btn-download-report">Download Report (.md)</button>
+      </div>
     </div>
-    <div class="drawer-body" id="schema-drawer-content">
-      <p class="terminal-dim">Loading schema information...</p>
-    </div>
-  </aside>
-  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+  </div>
 
   <!-- Settings Modal -->
   <div class="modal" id="settings-modal">
     <div class="modal-dialog card">
-      <div class="card-header">
-        <span class="card-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-          Model &amp; API Configuration
-        </span>
-        <button class="drawer-close" id="btn-close-modal">&times;</button>
+      <div class="modal-header">
+        <h3 class="modal-title">Model &amp; Sandbox Configuration</h3>
+        <button class="modal-close" id="btn-close-modal">&times;</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="cfg-api-key">OpenRouter API Key:</label>
-          <input type="password" id="cfg-api-key" placeholder="sk-or-v1-..." autocomplete="off">
-          <small class="form-help">Stored locally in your browser. Leave blank to automatically use the built-in Offline Expert Engine.</small>
+          <label for="cfg-api-key" class="form-label">OpenRouter API Key (Optional)</label>
+          <input type="password" id="cfg-api-key" class="form-input" placeholder="sk-or-v1-..." autocomplete="off">
+          <p class="form-hint">Leave blank to use the built-in <strong>Offline Expert Engine</strong> (zero dependencies &amp; 100% availability).</p>
         </div>
-
         <div class="form-group">
-          <label for="cfg-model-select">Select Model:</label>
-          <select id="cfg-model-select">
-            <option value="openrouter/free">openrouter/free (Recommended Free Auto-Router)</option>
-            <option value="google/gemma-4-31b-it:free">google/gemma-4-31b-it:free (Google High-Reasoning)</option>
-            <option value="google/gemma-4-26b-a4b-it:free">google/gemma-4-26b-a4b-it:free (Google Gemma 26B)</option>
-            <option value="liquid/lfm-2.5-2.6b:free">liquid/lfm-2.5-2.6b:free (Fast &amp; Lightweight)</option>
-            <option value="nvidia/nemotron-3.5-lightning:free">nvidia/nemotron-3.5-lightning:free (NVIDIA Lightning)</option>
-            <option value="offline-expert">Offline Expert Engine (Zero Network / Rule Heuristics)</option>
-            <option value="custom">Custom Model ID...</option>
+          <label for="cfg-model-select" class="form-label">Target Diagnostic Model</label>
+          <select id="cfg-model-select" class="form-input">
+            <option value="offline-expert">Offline Expert Engine (Local Heuristics)</option>
+            <option value="openrouter/free" selected>openrouter/free (Dynamic Zero-Cost Router)</option>
+            <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 Coder 32B (Free)</option>
+            <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B Instruct (Free)</option>
+            <option value="custom">Custom OpenRouter Model ID...</option>
           </select>
         </div>
-
         <div class="form-group hidden" id="custom-model-group">
-          <label for="cfg-custom-model">Custom OpenRouter Model ID:</label>
-          <input type="text" id="cfg-custom-model" placeholder="e.g. mistralai/mistral-7b-instruct:free">
+          <label for="cfg-custom-model" class="form-label">Custom Model Identifier</label>
+          <input type="text" id="cfg-custom-model" class="form-input" placeholder="e.g. anthropic/claude-3.5-sonnet">
         </div>
-
-        <div class="form-actions">
-          <button class="btn-secondary" id="btn-reset-db">Reset Sandbox DB</button>
-          <button class="btn-primary" id="btn-save-settings">Save Settings</button>
-        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-reset-db">Reset Database Sandbox</button>
+        <button class="btn-primary" id="btn-save-settings">Save Settings</button>
       </div>
     </div>
   </div>
+
+  <div class="modal-backdrop" id="modal-backdrop"></div>
 
   <script src="app.js"></script>
 </body>
