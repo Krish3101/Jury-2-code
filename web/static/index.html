@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL Error Explainer &amp; Fixer</title>
+  <link rel="stylesheet" href="app.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          <polyline points="12 12 15 15 21 9"></polyline>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-row">
+          <h1 class="logo-title">SQL Error Explainer &amp; Fixer</h1>
+          <span class="version-tag">Sandbox Active</span>
+        </div>
+        <p class="logo-subtitle">Intelligent Diagnostics • AST Safety Guardrails • Verified Remediation</p>
+      </div>
+    </div>
+    
+    <div class="header-right">
+      <button class="nav-btn" id="btn-schema" title="Inspect Database Tables &amp; Sample Data">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"></path><path d="M3 9h18"></path><path d="M9 21V9"></path></svg>
+        <span>Schema</span>
+      </button>
+      <button class="nav-btn" id="btn-settings" title="Configure OpenRouter API Key &amp; Models">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>Config</span>
+      </button>
+      <div class="active-model-pill clickable" id="active-model-badge" title="Click to switch model or configure API key">
+        <span class="status-dot"></span>
+        <span id="active-model-text">openrouter/free</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container: Workbench Exclusively -->
+  <main class="app-main">
+    <section id="tab-workbench" class="tab-content active">
+      <!-- Minimalist Preset Bar -->
+      <div class="preset-bar">
+        <div class="preset-bar-main">
+          <label for="preset-select" class="preset-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            Presets:
+          </label>
+          <select id="preset-select" class="preset-dropdown">
+            <option value="">-- Choose a broken SQL scenario --</option>
+          </select>
+          <div class="quick-preset-chips" id="quick-preset-chips">
+            <button type="button" class="chip-btn" data-preset="TC-01">Missing Comma</button>
+            <button type="button" class="chip-btn" data-preset="TC-04">Typo Column</button>
+            <button type="button" class="chip-btn" data-preset="TC-06">Ambiguous JOIN</button>
+            <button type="button" class="chip-btn" data-preset="TC-10">Missing JOIN ON</button>
+            <button type="button" class="chip-btn chip-danger" data-preset="TC-11">DROP Attack</button>
+          </div>
+        </div>
+        <div class="preset-desc" id="preset-desc-text">Select a preset scenario above or type custom SQL below.</div>
+      </div>
+
+      <!-- Editor & Console Grid -->
+      <div class="editor-grid">
+        <!-- Left Panel: Input Editor -->
+        <div class="card editor-card">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              SQL Query Input
+            </span>
+            <div class="card-actions">
+              <button class="btn-secondary btn-sm" id="btn-clear-sql">Clear</button>
+              <button class="btn-secondary btn-sm" id="btn-run-raw" title="Run raw query against sandbox to capture DB error">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                Execute
+              </button>
+            </div>
+          </div>
+          <div class="editor-container">
+            <textarea id="sql-input" placeholder="Type SQL query or pick a preset scenario..." spellcheck="false"></textarea>
+          </div>
+          <div class="card-footer">
+            <span class="shortcut-hint"><kbd>⌘/Ctrl</kbd> + <kbd>Enter</kbd> to Explain &amp; Fix</span>
+            <button class="btn-primary" id="btn-explain-fix">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+              Explain &amp; Fix with AI
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Panel: Database Error Output -->
+        <div class="card terminal-card">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              Database Sandbox Console
+            </span>
+            <span class="badge" id="terminal-status-badge">Idle</span>
+          </div>
+          <div class="terminal-body" id="terminal-output">
+            <span class="terminal-dim">// Database error output and stack trace will display here...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagnosis & Fix Results -->
+      <div id="results-section" class="results-section hidden">
+        <!-- Diagnosis Overview Card -->
+        <div class="card diagnosis-card">
+          <div class="card-header">
+            <div class="header-badge-row">
+              <span class="badge badge-category" id="res-category">SYNTAX</span>
+              <span class="badge badge-safety" id="res-safety">SAFE</span>
+              <span class="badge badge-model" id="res-model">OpenRouter</span>
+            </div>
+            <div class="confidence-indicator">
+              <span>Confidence:</span>
+              <div class="confidence-bar-bg"><div class="confidence-bar-fill" id="res-confidence-bar"></div></div>
+              <span id="res-confidence-text">95%</span>
+            </div>
+          </div>
+
+          <div class="diagnosis-grid">
+            <div class="diag-item">
+              <span class="diag-label">Root Cause</span>
+              <p class="diag-text" id="res-root-cause">-</p>
+            </div>
+            <div class="diag-item">
+              <span class="diag-label">Technical Analysis</span>
+              <p class="diag-text" id="res-technical">-</p>
+            </div>
+            <div class="diag-item">
+              <span class="diag-label">Remediation Summary</span>
+              <p class="diag-text" id="res-diff-summary">-</p>
+            </div>
+            <div class="diag-item">
+              <span class="diag-label">Production Prevention Advice</span>
+              <p class="diag-text highlight" id="res-prevention">-</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SQL Diff Card -->
+        <div class="card diff-card">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              Code Comparison (Diff)
+            </span>
+            <div class="card-actions">
+              <div class="view-toggle" id="diff-view-toggle">
+                <button type="button" class="toggle-btn active" id="btn-diff-split" title="Side-by-side view">Split</button>
+                <button type="button" class="toggle-btn" id="btn-diff-unified" title="Unified git-style view">Unified</button>
+              </div>
+              <button class="btn-secondary btn-sm" id="btn-copy-fixed">Copy Fixed SQL</button>
+            </div>
+          </div>
+          <!-- Split Diff Container -->
+          <div class="diff-container" id="diff-container-split">
+            <div class="diff-pane diff-left">
+              <div class="diff-pane-title">Original Broken SQL</div>
+              <div class="diff-lines" id="diff-left-lines"></div>
+            </div>
+            <div class="diff-pane diff-right">
+              <div class="diff-pane-title">AI Corrected SQL (Validated)</div>
+              <div class="diff-lines" id="diff-right-lines"></div>
+            </div>
+          </div>
+          <!-- Unified Diff Container -->
+          <div class="unified-diff-container hidden" id="diff-container-unified">
+            <pre class="unified-diff-text" id="diff-unified-text"></pre>
+          </div>
+        </div>
+
+        <!-- Verified Sandbox Execution Results Table -->
+        <div class="card table-card">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              Verified Sandbox Execution
+            </span>
+            <div class="execution-metrics" id="exec-metrics-badge">
+              <span class="metric-pill" id="metric-status">Status: SUCCESS</span>
+              <span class="metric-pill" id="metric-rows">Rows: 0</span>
+              <span class="metric-pill" id="metric-time">Time: 0 ms</span>
+            </div>
+          </div>
+          <div class="table-container" id="exec-table-container">
+            <p class="table-placeholder">Execution results table will render here.</p>
+          </div>
+
+          <!-- Query Execution Plan Accordion -->
+          <details class="plan-accordion" id="query-plan-details">
+            <summary>View SQLite Query Execution Plan (EXPLAIN QUERY PLAN)</summary>
+            <div class="plan-content" id="query-plan-content"></div>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Schema Inspector Slide-out Drawer -->
+  <aside class="schema-drawer" id="schema-drawer">
+    <div class="drawer-header">
+      <h3 class="drawer-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+        Database Schema &amp; Sandbox Data
+      </h3>
+      <button class="drawer-close" id="btn-close-drawer">&times;</button>
+    </div>
+    <div class="drawer-body" id="schema-drawer-content">
+      <p class="terminal-dim">Loading schema information...</p>
+    </div>
+  </aside>
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+
+  <!-- Settings Modal -->
+  <div class="modal" id="settings-modal">
+    <div class="modal-dialog card">
+      <div class="card-header">
+        <span class="card-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Model &amp; API Configuration
+        </span>
+        <button class="drawer-close" id="btn-close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="cfg-api-key">OpenRouter API Key:</label>
+          <input type="password" id="cfg-api-key" placeholder="sk-or-v1-..." autocomplete="off">
+          <small class="form-help">Stored locally in your browser. Leave blank to automatically use the built-in Offline Expert Engine.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="cfg-model-select">Select Model:</label>
+          <select id="cfg-model-select">
+            <option value="openrouter/free">openrouter/free (Recommended Free Auto-Router)</option>
+            <option value="google/gemma-4-31b-it:free">google/gemma-4-31b-it:free (Google High-Reasoning)</option>
+            <option value="google/gemma-4-26b-a4b-it:free">google/gemma-4-26b-a4b-it:free (Google Gemma 26B)</option>
+            <option value="liquid/lfm-2.5-2.6b:free">liquid/lfm-2.5-2.6b:free (Fast &amp; Lightweight)</option>
+            <option value="nvidia/nemotron-3.5-lightning:free">nvidia/nemotron-3.5-lightning:free (NVIDIA Lightning)</option>
+            <option value="offline-expert">Offline Expert Engine (Zero Network / Rule Heuristics)</option>
+            <option value="custom">Custom Model ID...</option>
+          </select>
+        </div>
+
+        <div class="form-group hidden" id="custom-model-group">
+          <label for="cfg-custom-model">Custom OpenRouter Model ID:</label>
+          <input type="text" id="cfg-custom-model" placeholder="e.g. mistralai/mistral-7b-instruct:free">
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-secondary" id="btn-reset-db">Reset Sandbox DB</button>
+          <button class="btn-primary" id="btn-save-settings">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
